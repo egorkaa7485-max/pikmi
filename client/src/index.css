@@ -1,0 +1,532 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* LIGHT MODE - RST GAMES DURAK ONLINE THEME */
+:root {
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+  
+  /* RST Games Color Palette */
+  --background: 206 29% 47%;  /* Blue-gray game table #486B87 */
+  --foreground: 0 0% 100%;  /* White text */
+  --border: 206 20% 35%;  /* Darker blue for borders */
+  
+  --card: 0 0% 100%;  /* White cards */
+  --card-foreground: 0 0% 9%;  /* Black text on cards */
+  --card-border: 0 0% 85%;  /* Light gray card border */
+  
+  --sidebar: 206 29% 47%;  /* Same as background */
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-border: 206 20% 35%;
+  --sidebar-primary: 0 72% 56%;  /* Red for active state #E03C3C */
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 206 25% 40%;  /* Slightly darker blue */
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-ring: 0 72% 56%;
+  
+  --popover: 0 0% 100%;  /* White popover */
+  --popover-foreground: 0 0% 9%;
+  --popover-border: 0 0% 85%;
+  
+  --primary: 0 72% 56%;  /* RST Red #E03C3C */
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 206 25% 55%;  /* Lighter blue */
+  --secondary-foreground: 0 0% 100%;
+  
+  --muted: 206 20% 40%;  /* Muted blue */
+  --muted-foreground: 0 0% 80%;
+  
+  --accent: 92 38% 68%;  /* Success green #A8D08D for money */
+  --accent-foreground: 0 0% 9%;
+  
+  --destructive: 0 72% 56%;  /* Red */
+  --destructive-foreground: 0 0% 100%;
+  
+  --input: 0 0% 100%;  /* White input background */
+  --ring: 0 72% 56%;  /* Red focus ring */
+  
+  --chart-1: 0 72% 56%;
+  --chart-2: 92 38% 68%;
+  --chart-3: 206 29% 47%;
+  --chart-4: 35 80% 50%;
+  --chart-5: 270 50% 60%;
+  
+  /* Custom RST Colors */
+  --rst-game-bg: 206 29% 47%;  /* #486B87 */
+  --rst-red: 0 72% 56%;  /* #E03C3C */
+  --rst-money-green: 92 38% 68%;  /* #A8D08D */
+  --rst-filter-bg: 206 29% 50%;
+  --rst-lobby-item: 206 25% 42%;
+  --rst-inactive: 0 0% 42%;
+  
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --font-script: "Comfortaa", "Lobster", cursive;
+  --radius: .5rem;
+  --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+  --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+  --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
+  --shadow: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
+  --shadow-md: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 2px 4px -1px hsl(0 0% 0% / 0.00);
+  --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 4px 6px -1px hsl(0 0% 0% / 0.00);
+  --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 8px 10px -1px hsl(0 0% 0% / 0.00);
+  --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+
+/* Fallback for older browsers */
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --primary-border: hsl(var(--primary));
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --secondary-border: hsl(var(--secondary));
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --muted-border: hsl(var(--muted));
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --accent-border: hsl(var(--accent));
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --destructive-border: hsl(var(--destructive));
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+.dark {
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .05);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .09);
+  
+  /* Dark mode - slightly darker version of RST theme */
+  --background: 206 35% 35%;  /* Darker blue-gray */
+  --foreground: 0 0% 98%;
+  --border: 206 25% 25%;
+  
+  --card: 0 0% 100%;  /* White cards stay white */
+  --card-foreground: 0 0% 9%;
+  --card-border: 0 0% 85%;
+  
+  --sidebar: 206 35% 35%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-border: 206 25% 25%;
+  --sidebar-primary: 0 72% 56%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 206 30% 30%;
+  --sidebar-accent-foreground: 0 0% 98%;
+  --sidebar-ring: 0 72% 56%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 9%;
+  --popover-border: 0 0% 85%;
+  
+  --primary: 0 72% 56%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 206 30% 45%;
+  --secondary-foreground: 0 0% 98%;
+  
+  --muted: 206 25% 30%;
+  --muted-foreground: 0 0% 70%;
+  
+  --accent: 92 38% 68%;
+  --accent-foreground: 0 0% 9%;
+  
+  --destructive: 0 72% 56%;
+  --destructive-foreground: 0 0% 100%;
+  
+  --input: 0 0% 100%;
+  --ring: 0 72% 56%;
+  
+  --chart-1: 0 72% 60%;
+  --chart-2: 92 40% 70%;
+  --chart-3: 206 35% 50%;
+  --chart-4: 35 80% 55%;
+  --chart-5: 270 50% 65%;
+  
+  /* Custom RST Colors - darker variants */
+  --rst-game-bg: 206 35% 35%;
+  --rst-red: 0 72% 56%;
+  --rst-money-green: 92 38% 68%;
+  --rst-filter-bg: 206 35% 38%;
+  --rst-lobby-item: 206 30% 32%;
+  --rst-inactive: 0 0% 50%;
+  
+  --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+  --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+  --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
+  --shadow: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
+  --shadow-md: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 2px 4px -1px hsl(0 0% 0% / 0.00);
+  --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 4px 6px -1px hsl(0 0% 0% / 0.00);
+  --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 8px 10px -1px hsl(0 0% 0% / 0.00);
+  --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+
+/* Fallback for older browsers */
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --primary-border: hsl(var(--primary));
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --secondary-border: hsl(var(--secondary));
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --muted-border: hsl(var(--muted));
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --accent-border: hsl(var(--accent));
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --destructive-border: hsl(var(--destructive));
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/**
+ * Using the elevate system.
+ * Automatic contrast adjustment.
+ *
+ * <element className="hover-elevate" />
+ * <element className="active-elevate-2" />
+ *
+ * // Using the tailwind utility when a data attribute is "on"
+ * <element className="toggle-elevate data-[state=on]:toggle-elevated" />
+ * // Or manually controlling the toggle state
+ * <element className="toggle-elevate toggle-elevated" />
+ *
+ * Elevation systems have to handle many states.
+ * - not-hovered, vs. hovered vs. active  (three mutually exclusive states)
+ * - toggled or not
+ * - focused or not (this is not handled with these utilities)
+ *
+ * Even without handling focused or not, this is six possible combinations that
+ * need to be distinguished from eachother visually.
+ */
+@layer utilities {
+
+  /* Hide ugly search cancel button in Chrome until we can style it properly */
+  input[type="search"]::-webkit-search-cancel-button {
+    @apply hidden;
+  }
+
+  /* Placeholder styling for contentEditable div */
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
+
+  /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
+   * buttons/badges can remove the automatic brightness adjustment on interactions
+   * and program their own. */
+  .no-default-hover-elevate {}
+
+  .no-default-active-elevate {}
+
+
+  /**
+   * Toggleable backgrounds go behind the content. Hoverable/active goes on top.
+   * This way they can stack/compound. Both will overlap the parent's borders!
+   * So borders will be automatically adjusted both on toggle, and hover/active,
+   * and they will be compounded.
+   */
+  .toggle-elevate::before,
+  .toggle-elevate-2::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    /*border-radius: inherit;   match rounded corners */
+    border-radius: inherit;
+    z-index: -1;
+    /* sits behind content but above backdrop */
+  }
+
+  .toggle-elevate.toggle-elevated::before {
+    background-color: var(--elevate-2);
+  }
+
+  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
+  .border.toggle-elevate::before {
+    inset: -1px;
+  }
+
+  /* Does not work on elements with overflow:hidden! */
+  .hover-elevate:not(.no-default-hover-elevate),
+  .active-elevate:not(.no-default-active-elevate),
+  .hover-elevate-2:not(.no-default-hover-elevate),
+  .active-elevate-2:not(.no-default-active-elevate) {
+    position: relative;
+    z-index: 0;
+  }
+
+  .hover-elevate:not(.no-default-hover-elevate)::after,
+  .active-elevate:not(.no-default-active-elevate)::after,
+  .hover-elevate-2:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:not(.no-default-active-elevate)::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    /*border-radius: inherit;   match rounded corners */
+    border-radius: inherit;
+    z-index: 999;
+    /* sits in front of content */
+  }
+
+  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-1);
+  }
+
+  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-2);
+  }
+
+  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
+    inset: -1px;
+  }
+  
+  /* ========== RST GAMES DURAK CUSTOM UTILITIES ========== */
+  
+  /* Game table background texture */
+  .game-table-bg {
+    background-color: hsl(var(--rst-game-bg));
+    background-image: 
+      radial-gradient(circle at 20% 50%, rgba(255,255,255,.02) 0%, transparent 50%),
+      radial-gradient(circle at 80% 50%, rgba(0,0,0,.02) 0%, transparent 50%);
+  }
+  
+  /* Playing card styling */
+  .playing-card {
+    aspect-ratio: 5 / 7;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    background: white;
+    transition: transform 0.2s ease-out;
+  }
+  
+  .playing-card:hover {
+    transform: translateY(-10px);
+  }
+  
+  .playing-card-back {
+    background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+    background-image:
+      repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.05) 10px, rgba(255,255,255,.05) 20px),
+      linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+  }
+  
+  /* RST action button (white bg, red text) */
+  .rst-action-btn {
+    background: white;
+    color: hsl(var(--rst-red));
+    font-weight: 600;
+    border-radius: 25px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+  }
+  
+  .rst-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .rst-action-btn:active {
+    transform: scale(0.98);
+  }
+  
+  /* Toggle button with checkmark */
+  .rst-toggle-btn {
+    position: relative;
+    background: white;
+    border-radius: 20px;
+    padding: 8px 16px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  
+  .rst-toggle-btn.selected {
+    border-color: hsl(var(--rst-red));
+  }
+  
+  .rst-toggle-btn.selected::after {
+    content: "✓";
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: hsl(var(--rst-red));
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  /* Money animation */
+  @keyframes money-win {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.5);
+    }
+    20% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.2);
+    }
+    80% {
+      opacity: 1;
+      transform: translate(-50%, -80px) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -120px) scale(0.8);
+    }
+  }
+  
+  .money-win-animation {
+    animation: money-win 2.5s ease-out forwards;
+  }
+  
+  .money-bill {
+    background: linear-gradient(135deg, #b8d89e 0%, #a8d08d 50%, #98c07d 100%);
+    border: 2px solid #7fa86a;
+    border-radius: 8px;
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Card deal animation */
+  @keyframes deal-card {
+    from {
+      transform: translate(0, 0) rotate(0deg);
+      opacity: 0;
+    }
+    to {
+      transform: translate(var(--deal-x), var(--deal-y)) rotate(var(--deal-rot));
+      opacity: 1;
+    }
+  }
+  
+  .card-deal {
+    animation: deal-card 0.3s ease-out forwards;
+  }
+  
+  /* Card play animation */
+  @keyframes play-card {
+    to {
+      transform: translate(var(--play-x), var(--play-y));
+    }
+  }
+  
+  .card-play {
+    animation: play-card 0.4s ease-out forwards;
+  }
+  
+  /* Script font for section headers */
+  .font-script {
+    font-family: var(--font-script);
+    font-style: italic;
+    font-weight: 600;
+  }
+  
+  /* Responsive card sizing */
+  @media (max-width: 480px) {
+    .playing-card {
+      width: clamp(40px, 15vw, 60px);
+    }
+  }
+  
+  @media (min-width: 481px) and (max-width: 812px) and (orientation: landscape) {
+    .playing-card {
+      width: clamp(45px, 10vw, 70px);
+    }
+  }
+  
+  @media (min-width: 813px) {
+    .playing-card {
+      width: clamp(60px, 12vw, 80px);
+    }
+  }
+  
+  /* Bottom navigation active state */
+  .bottom-nav-item {
+    transition: color 0.2s;
+  }
+  
+  .bottom-nav-item.active {
+    color: hsl(var(--rst-red));
+  }
+  
+  /* Lobby item styling */
+  .lobby-item {
+    background: hsl(var(--rst-lobby-item) / 0.6);
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    transition: background-color 0.2s;
+  }
+  
+  .lobby-item:hover {
+    background: hsl(var(--rst-lobby-item) / 0.8);
+  }
+  
+  /* Circular timer progress */
+  @keyframes timer-progress {
+    from {
+      stroke-dashoffset: 0;
+    }
+    to {
+      stroke-dashoffset: var(--timer-dashoffset);
+    }
+  }
+  
+  .timer-circle {
+    animation: timer-progress var(--timer-duration) linear forwards;
+  }
+}

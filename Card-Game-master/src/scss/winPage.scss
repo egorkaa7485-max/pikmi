@@ -1,0 +1,19 @@
+.winPage {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: $whiteColor;
+  text-align: center;
+
+  &__title {
+    font-size: 2rem;
+  }
+
+  &__newGameBtn {
+    @extend %newGameBtn;
+    margin-top: 50px;
+  }
+}

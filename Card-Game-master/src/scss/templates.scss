@@ -1,0 +1,56 @@
+%clubs {
+  background: url("../assets/svg/clubs.svg") no-repeat;
+}
+
+%diamonds {
+  background: url("../assets/svg/diamond.svg") no-repeat;
+}
+
+%spades {
+  background: url("../assets/svg/spade.svg") no-repeat;
+}
+
+%hearts {
+  background: url("../assets/svg/heart.svg") no-repeat;
+}
+
+%suitSize {
+  width: 40px;
+  height: 40px;
+}
+
+%rankSuitSize {
+  margin-top: 2px;
+  width: 12px;
+  height: 12px;
+}
+
+%btn {
+  width: 150px;
+  height: 50px;
+  background: $actionDefaultColor;
+  color: $whiteColor;
+  border-radius: 50px;
+  font-weight: bold;
+  outline: none;
+  border: none;
+  transition: .3s;
+  cursor: pointer;
+}
+
+%newGameBtn {
+  @extend %btn;
+  font-size: 1.3rem;
+  width: 200px;
+  height: 80px;
+  z-index: 4;
+
+  &:hover {
+    background-color: $startBtnHoverColor;
+  }
+}
+
+%name {
+  font-size: 2rem;
+  color: $whiteColor;
+}

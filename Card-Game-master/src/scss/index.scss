@@ -1,0 +1,45 @@
+@import '~normalize.css';
+@import "fonts";
+@import "colors";
+@import "templates";
+
+body {
+  font-family: 'Akzidenz Grotesk', sans-serif;
+  font-size: 16px;
+
+  .game {
+    background: $backgroundColor;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    @import "startPage";
+    @import "game";
+    @import "winPage";
+  }
+
+  .plug {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: $whiteColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    z-index: 5;
+
+    &__title {
+      text-align: center;
+    }
+  }
+
+  @import "media";
+}
+
