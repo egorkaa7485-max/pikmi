@@ -89,22 +89,28 @@ export const games = sqliteTable("games", {
 });
 
 // Insert schemas
+export const gameTypes = ["подкидной", "переводной"] as const;
+export const throwModes = ["соседи", "все"] as const;
+export const variants = ["классика"] as const;
+export const fairnessModes = ["ничья"] as const;
+export const speedOptions = ["slow", "normal"] as const;
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
 });
 
-export const insertGameSchema = createInsertSchema(games).pick({
-  stake: true,
-  maxPlayers: true,
-  deckSize: true,
-  speed: true,
-  gameType: true,
-  throwMode: true,
-  variant: true,
-  fairness: true,
-  isPrivate: true,
-  password: true,
+export const insertGameSchema = z.object({
+  stake: z.number().positive(),
+  maxPlayers: z.number().min(2).max(6),
+  deckSize: z.number(),
+  speed: z.enum(speedOptions),
+  gameType: z.enum(gameTypes),
+  throwMode: z.enum(throwModes),
+  variant: z.enum(variants),
+  fairness: z.enum(fairnessModes),
+  isPrivate: z.boolean().transform((val) => val ? 1 : 0),
+  password: z.string().optional(),
 });
 
 export const insertFriendSchema = createInsertSchema(friends).omit({
@@ -175,15 +181,8 @@ export interface GameState {
   stake: number;
 }
 
-export const gameTypes = ["подкидной", "переводной"] as const;
-export const throwModes = ["соседи", "все"] as const;
-export const variants = ["классика"] as const;
-export const fairnessModes = ["ничья"] as const;
-
 export type GameType = typeof gameTypes[number];
 export type ThrowMode = typeof throwModes[number];
 export type Variant = typeof variants[number];
 export type FairnessMode = typeof fairnessModes[number];
-
-export const speedOptions = ["slow", "normal"] as const;
 export type Speed = typeof speedOptions[number];

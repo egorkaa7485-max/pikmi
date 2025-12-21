@@ -5,7 +5,6 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { insertGameSchema } from "@shared/schema";
 import { initializeGameState, playAttackCard, playDefenseCard, takeCards, beat } from "./gameLogic";
-import { broadcastToGame } from "./app";
 
 interface WSClient extends WebSocket {
   userId?: string;
@@ -310,12 +309,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           case 'chat_message': {
-            const { gameId, userId, username, message: chatText } = payload;
+            const { gameId, userId, message: chatText } = payload;
             
             const chatMessage = await storage.createChatMessage({
               gameId,
               userId,
-              username,
               message: chatText
             });
 
