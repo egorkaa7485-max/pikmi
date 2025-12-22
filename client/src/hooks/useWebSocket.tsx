@@ -35,9 +35,9 @@ export function useWebSocket(gameId?: string) {
       reconnectTimeoutRef.current = undefined;
     }
 
-    // Use the same port as the HTTP server (process.env.PORT or 5000)
-    const port = process.env.PORT || '5000';
-    const wsUrl = `ws://localhost:${port}/ws`;
+    // Build WebSocket URL using current window location
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
 
     try {
       const ws = new WebSocket(wsUrl);
