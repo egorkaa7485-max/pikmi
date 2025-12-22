@@ -19,20 +19,28 @@ export function PlayerAvatarsDisplay({
     return players[index] || null;
   });
 
-  // Calculate positions for semi-circle layout
-  // Players arranged in a semi-circle around the table
-  const getPlayerPosition = (index: number) => {
-    const totalSlots = maxPlayers;
-    // Distribute players in a semi-circle (180 degrees)
-    // Angle in degrees for each position
-    const angleStep = 180 / (totalSlots - 1);
-    const angle = index * angleStep - 90; // Start from left (180° - 90° = 90°, end at right)
-    
+  // Find current player index
+  const currentPlayerIndex = playerSlots.findIndex(
+    (player) => player?.id === currentPlayerId
+  );
+
+  // Calculate positions with current player at bottom center
+  // Other players arranged perpendicular/opposite around the table
+  const getPlayerPosition = (slotIndex: number) => {
+    // Calculate relative position from current player
+    // Current player is always at bottom (index 0 in display)
+    const relativeIndex = (slotIndex - currentPlayerIndex + maxPlayers) % maxPlayers;
+
+    // For a circular arrangement around the table
+    // 0 = bottom (current player)
+    // Other positions distributed around the circle
+    const angle = (relativeIndex / maxPlayers) * 360 - 90; // -90 so bottom is 0 degrees
+
     // Convert to radians
     const radians = (angle * Math.PI) / 180;
-    
-    // Calculate position on a circle with radius 280px
-    const radius = 280;
+
+    // Calculate position on a circle with radius 300px
+    const radius = 300;
     const x = Math.cos(radians) * radius;
     const y = Math.sin(radians) * radius;
 
