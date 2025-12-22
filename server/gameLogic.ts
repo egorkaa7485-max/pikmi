@@ -86,6 +86,7 @@ export function initializeGameState(
     phase: "attacking",
     canThrowIn: false,
     stake,
+    maxPlayers: players.length,
   };
 }
 
