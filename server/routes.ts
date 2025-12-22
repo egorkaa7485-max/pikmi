@@ -194,7 +194,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/games", async (req, res) => {
     try {
-      const { maxPlayers, deckSize, stake, creatorId, speed, gameType, throwMode, variant, fairness, isPrivate, password } = req.body;
+      let { maxPlayers, deckSize, stake, creatorId, speed, gameType, throwMode, variant, fairness, isPrivate, password } = req.body;
+      
+      // If creatorId is missing, try to get or create a guest user
+      if (!creatorId) {
+        const guestUser = await storage.getUserByUsername("Guest");
+        if (guestUser) {
+          creatorId = guestUser.id;
+        } else {
+          const newUser = await storage.createUser({
+            username: `Guest_${Math.floor(Math.random() * 10000)}`,
+            password: "guest_password",
+          });
+          creatorId = newUser.id;
+        }
+      }
+
       console.log("Creating game with params:", { maxPlayers, deckSize, stake, creatorId, speed, gameType, throwMode, variant, fairness, isPrivate });
       const game = await storage.createGame(
         { 

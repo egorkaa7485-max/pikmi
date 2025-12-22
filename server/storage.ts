@@ -103,6 +103,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createGame(game: InsertGame, creatorId: string): Promise<Game> {
+    const players = [
+      {
+        id: creatorId,
+        username: "Host", // Will be updated when player joins
+        cards: [],
+        position: 0,
+        isReady: true,
+        coins: 0
+      }
+    ];
+
     const [newGame] = await db
       .insert(games)
       .values({
@@ -110,6 +121,9 @@ export class DatabaseStorage implements IStorage {
         playerCount: 1,
         status: "waiting",
         creatorId,
+        players: JSON.stringify(players),
+        tableCards: JSON.stringify([]),
+        deck: JSON.stringify([]),
       })
       .returning();
     return newGame;
