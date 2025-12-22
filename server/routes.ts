@@ -233,6 +233,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/games/:id/join", async (req, res) => {
+    try {
+      const gameId = req.params.id;
+      const { playerId } = req.body;
+      
+      const gameState = await storage.getGameState(gameId);
+      if (!gameState) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+      
+      res.json(gameState);
+    } catch (error) {
+      console.error("Game join error:", error);
+      res.status(500).json({ error: "Failed to join game" });
+    }
+  });
+
+  app.post("/api/games/:id/attack", async (req, res) => {
+    try {
+      const gameId = req.params.id;
+      const { playerId, card } = req.body;
+      
+      const gameState = await storage.getGameState(gameId);
+      if (!gameState) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+      
+      const result = playAttackCard(gameState, playerId, card);
+      if ("error" in result) {
+        return res.status(400).json(result);
+      }
+      
+      await storage.updateGameState(gameId, result);
+      broadcastToGame(gameId, { type: "game_state", payload: result });
+      res.json(result);
+    } catch (error) {
+      console.error("Game attack error:", error);
+      res.status(500).json({ error: "Failed to play attack card" });
+    }
+  });
+
+  app.post("/api/games/:id/defend", async (req, res) => {
+    try {
+      const gameId = req.params.id;
+      const { playerId, card, tableCardIndex } = req.body;
+      
+      const gameState = await storage.getGameState(gameId);
+      if (!gameState) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+      
+      const result = playDefenseCard(gameState, playerId, card, tableCardIndex);
+      if ("error" in result) {
+        return res.status(400).json(result);
+      }
+      
+      await storage.updateGameState(gameId, result);
+      broadcastToGame(gameId, { type: "game_state", payload: result });
+      res.json(result);
+    } catch (error) {
+      console.error("Game defend error:", error);
+      res.status(500).json({ error: "Failed to play defense card" });
+    }
+  });
+
+  app.post("/api/games/:id/take", async (req, res) => {
+    try {
+      const gameId = req.params.id;
+      const { playerId } = req.body;
+      
+      const gameState = await storage.getGameState(gameId);
+      if (!gameState) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+      
+      const result = takeCards(gameState, playerId);
+      if ("error" in result) {
+        return res.status(400).json(result);
+      }
+      
+      await storage.updateGameState(gameId, result);
+      broadcastToGame(gameId, { type: "game_state", payload: result });
+      res.json(result);
+    } catch (error) {
+      console.error("Game take error:", error);
+      res.status(500).json({ error: "Failed to take cards" });
+    }
+  });
+
+  app.post("/api/games/:id/beat", async (req, res) => {
+    try {
+      const gameId = req.params.id;
+      const { playerId } = req.body;
+      
+      const gameState = await storage.getGameState(gameId);
+      if (!gameState) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+      
+      const result = beat(gameState, playerId);
+      if ("error" in result) {
+        return res.status(400).json(result);
+      }
+      
+      await storage.updateGameState(gameId, result);
+      broadcastToGame(gameId, { type: "game_state", payload: result });
+      res.json(result);
+    } catch (error) {
+      console.error("Game beat error:", error);
+      res.status(500).json({ error: "Failed to beat" });
+    }
+  });
+
   app.delete("/api/games/:id", async (req, res) => {
     try {
       await storage.deleteGame(req.params.id);

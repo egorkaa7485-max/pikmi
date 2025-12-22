@@ -20,3 +20,6 @@
 [x] 20. Verified game table initialization and waiting status
 [x] 21. Final verification - application running and UI displaying correctly
 [x] 22. Import migration to Replit environment completed
+[x] 23. FIXED GAME INITIALIZATION - Added 'game_state' WebSocket message handler
+[x] 24. FIXED - Added missing REST API endpoints (join, attack, defend, take, beat)
+[x] 25. Game table now shows properly when joining instead of initialization screen

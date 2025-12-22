@@ -191,13 +191,8 @@ export function useGameEvents(gameId: string, userId: string, username: string) 
         setPlayers((prev) => prev.filter((p) => p.userId !== payload.userId));
         break;
 
+      case 'game_state':
       case 'game_started':
-        setGameState(payload);
-        if (payload.players && Array.isArray(payload.players)) {
-          setPlayers(payload.players.map((p: any) => ({ userId: p.id, username: p.username })));
-        }
-        break;
-
       case 'game_update':
         setGameState(payload);
         if (payload.players && Array.isArray(payload.players)) {
