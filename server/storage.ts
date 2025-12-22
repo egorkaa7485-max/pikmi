@@ -7,7 +7,6 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
-import { randomUUID } from "crypto";
 
 export interface IStorage {
   // Users
@@ -30,6 +29,8 @@ export interface IStorage {
   // Game Actions
   joinGame(gameId: string, userId: string, username: string): Promise<boolean>;
   leaveGame(gameId: string, userId: string): Promise<boolean>;
+  setPlayerReady(gameId: string, playerId: string, isReady: boolean): Promise<void>;
+  kickPlayer(gameId: string, playerId: string): Promise<void>;
   
   // Friends
   getFriends(userId: string): Promise<Friend[]>;
@@ -166,6 +167,25 @@ export class DatabaseStorage implements IStorage {
       playerCount: Math.max(1, game.playerCount - 1) 
     });
     return true;
+  }
+
+  async setPlayerReady(gameId: string, playerId: string, isReady: boolean): Promise<void> {
+    const gameState = await this.getGameState(gameId);
+    if (!gameState) return;
+
+    const playerIdx = gameState.players.findIndex(p => p.id === playerId);
+    if (playerIdx !== -1) {
+      gameState.players[playerIdx].isReady = isReady;
+      await this.updateGameState(gameId, gameState);
+    }
+  }
+
+  async kickPlayer(gameId: string, playerId: string): Promise<void> {
+    const gameState = await this.getGameState(gameId);
+    if (!gameState) return;
+
+    gameState.players = gameState.players.filter(p => p.id !== playerId);
+    await this.updateGameState(gameId, gameState);
   }
 
   // ===== FRIENDS =====
