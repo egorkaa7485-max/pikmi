@@ -76,17 +76,50 @@ export function PlayerAvatarsDisplay({
     </div>
   );
 
-  return (
-    <div className="absolute inset-0 flex flex-col items-center justify-between pointer-events-none py-4 md:py-6 lg:py-8">
-      {/* Opponents at top center */}
-      <div className="flex flex-wrap justify-center items-start gap-2 md:gap-3 lg:gap-4 px-4 max-w-4xl w-full">
-        {opponents.map((player, index) => (
-          <PlayerAvatar key={`opponent-${index}`} player={player} />
-        ))}
-      </div>
+  // Calculate semi-circle positions for opponents
+  const getOpponentPosition = (index: number) => {
+    const totalOpponents = opponents.length;
+    if (totalOpponents === 0) return { x: 0, y: 0 };
+    
+    // Distribute opponents in a semi-circle (180 degrees) at the top
+    // Center horizontally, positioned below the top
+    const angleStep = 180 / (totalOpponents + 1);
+    const angle = (index + 1) * angleStep; // Skip 0, start from first angle
+    
+    // Convert to radians
+    const radians = (angle * Math.PI) / 180;
+    
+    // Responsive radius
+    const baseRadius = 250;
+    const radius = window.innerWidth < 640 ? baseRadius * 0.6 : window.innerWidth < 1024 ? baseRadius * 0.8 : baseRadius;
+    
+    // Calculate x, y with semi-circle at top
+    const x = Math.cos(radians - Math.PI / 2) * radius;
+    const y = Math.sin(radians - Math.PI / 2) * radius - 80; // Offset downward from very top
 
-      {/* Current player at bottom center */}
-      <div className="mb-2 md:mb-4">
+    return { x, y };
+  };
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {/* Opponents in semi-circle */}
+      {opponents.map((player, index) => {
+        const position = getOpponentPosition(index);
+        return (
+          <div
+            key={`opponent-${index}`}
+            className="absolute"
+            style={{
+              transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
+            }}
+          >
+            <PlayerAvatar player={player} />
+          </div>
+        );
+      })}
+
+      {/* Current player at bottom center - with high z-index to appear above green fade */}
+      <div className="absolute bottom-24 md:bottom-32 lg:bottom-40 z-20">
         {currentPlayer ? (
           <PlayerAvatar player={currentPlayer} isCurrentPlayer={true} />
         ) : (

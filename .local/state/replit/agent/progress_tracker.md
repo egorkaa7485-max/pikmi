@@ -24,12 +24,12 @@
 [x] 24. FIXED - Added missing REST API endpoints (join, attack, defend, take, beat)
 [x] 25. Game table now shows properly when joining instead of initialization screen
 [x] 26. IMPLEMENTED PLAYER AVATARS - Created PlayerAvatarsDisplay component
-[x] 27. YOUR AVATAR at BOTTOM CENTER of screen
-[x] 28. OPPONENTS CENTERED at TOP of screen (not semi-circle)
-[x] 29. RESPONSIVE DESIGN - Adapts to mobile/tablet/desktop screen sizes
-[x] 30. Avatar sizes: 40px (mobile), 48px (tablet), 56px (desktop)
-[x] 31. Flexbox layout with wrapping for different screen widths
-[x] 32. Shows first letter of username in circle (with gradient background)
-[x] 33. Shows "+" for unconnected/empty player slots
-[x] 34. Number of circles matches maxPlayers of game
-[x] 35. FINAL LAYOUT - Your player at bottom, opponents centered at top, fully responsive - COMPLETE
+[x] 27. YOUR AVATAR at BOTTOM CENTER - Positioned above green fade with z-index
+[x] 28. OPPONENTS in SEMI-CIRCLE - 180° arc positioned below top of screen
+[x] 29. Semi-circle responsive radius - Adapts to mobile/tablet/desktop
+[x] 30. Avatar sizes responsive - 40px (mobile), 48px (tablet), 56px (desktop)
+[x] 31. Shows first letter of username in circle (with gradient background)
+[x] 32. Shows "+" for unconnected/empty player slots
+[x] 33. Card count badges displayed on each avatar
+[x] 34. Fully responsive layout working on all screen sizes
+[x] 35. FINAL LAYOUT COMPLETE - All requirements met - Semi-circle opponents above, your avatar visible at bottom
