@@ -11,3 +11,6 @@
 [x] 11. Provisioned PostgreSQL database
 [x] 12. Pushed schema to database
 [x] 13. Verified application is running correctly
+[x] 14. Migrated from SQLite to PostgreSQL schema/driver
+[x] 15. Fixed game creation 500 errors with improved logging
+[x] 16. Verified database connection and API health
