@@ -25,24 +25,29 @@ export function PlayerAvatarsDisplay({
   );
 
   // Current player is always at bottom center
-  // Other players arranged perpendicular/opposite around the table
+  // Other players arranged in a semi-circle at the top
   const getPlayerPosition = (slotIndex: number) => {
     // Calculate relative position from current player
-    // Current player is always at bottom (angle -90°)
     const relativeIndex = (slotIndex - currentPlayerIndex + maxPlayers) % maxPlayers;
 
-    // For a circular arrangement around the table
-    // 0 = bottom (current player)
-    // Other positions distributed around the circle
-    const angle = (relativeIndex / maxPlayers) * 360 - 90; // -90 so bottom is 0 degrees
+    if (relativeIndex === 0) {
+      // Current player at bottom center
+      return { x: 0, y: 300 };
+    }
+
+    // Other players in semi-circle at top (0 to 180 degrees)
+    // Distribute remaining players across the semi-circle
+    const remainingPlayers = maxPlayers - 1;
+    const angleStep = 180 / (remainingPlayers + 1);
+    const angle = relativeIndex * angleStep; // 0 to 180 degrees
 
     // Convert to radians
     const radians = (angle * Math.PI) / 180;
 
     // Calculate position on a circle with radius 300px
     const radius = 300;
-    const x = Math.cos(radians) * radius;
-    const y = Math.sin(radians) * radius;
+    const x = Math.cos(radians) * radius - radius; // Shift to make 0° at left
+    const y = -Math.sin(radians) * radius; // Negative to make 0° at top
 
     return { x, y };
   };
