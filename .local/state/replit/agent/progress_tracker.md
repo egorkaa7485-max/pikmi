@@ -8,3 +8,6 @@
 [x] 8. Fix missing registerRoutes and broadcastToGame exports
 [x] 9. Push database schema
 [x] 10. Import completed successfully
+[x] 11. Provisioned PostgreSQL database
+[x] 12. Pushed schema to database
+[x] 13. Verified application is running correctly
