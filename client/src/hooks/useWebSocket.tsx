@@ -35,25 +35,35 @@ export function useWebSocket(gameId?: string) {
       reconnectTimeoutRef.current = undefined;
     }
 
-    // Build WebSocket URL using current window location
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-
     try {
+      // Build WebSocket URL - use the same domain/protocol as the page
+      // In Replit, this automatically routes to the correct backend
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const hostname = window.location.hostname;
+      const port = window.location.port;
+      
+      // Construct URL properly - include port if it's not default HTTP/HTTPS
+      let wsUrl: string;
+      if (port && port !== '80' && port !== '443') {
+        wsUrl = `${protocol}//${hostname}:${port}/ws`;
+      } else {
+        wsUrl = `${protocol}//${hostname}/ws`;
+      }
+
+      console.log('Connecting to WebSocket:', wsUrl);
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
       isManualCloseRef.current = false;
 
       ws.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('WebSocket connected successfully');
         setIsConnected(true);
-        reconnectAttemptsRef.current = 0; // Reset reconnect attempts on successful connection
+        reconnectAttemptsRef.current = 0;
       };
 
       ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
-          // Always update - the useEffect will handle deduplication
           setLastMessage(message);
         } catch (error) {
           console.error('Failed to parse WebSocket message:', error);
@@ -68,7 +78,7 @@ export function useWebSocket(gameId?: string) {
         // Only reconnect if it wasn't a manual close and we still have a gameId
         if (!isManualCloseRef.current && gameIdRef.current && reconnectAttemptsRef.current < 5) {
           reconnectAttemptsRef.current += 1;
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 10000); // Exponential backoff, max 10s
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 10000);
           
           reconnectTimeoutRef.current = setTimeout(() => {
             if (gameIdRef.current && !isManualCloseRef.current) {
@@ -83,21 +93,22 @@ export function useWebSocket(gameId?: string) {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        // Don't reload page on error, just log it
       };
     } catch (error) {
       console.error('Failed to create WebSocket:', error);
     }
-  }, []); // Empty deps - use refs for gameId
+  }, []);
 
   const send = useCallback((type: string, payload: any) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type, payload }));
+    } else {
+      console.warn('WebSocket not connected, unable to send:', type);
     }
   }, []);
 
   const disconnect = useCallback(() => {
-    isManualCloseRef.current = true; // Mark as manual close to prevent reconnection
+    isManualCloseRef.current = true;
     reconnectAttemptsRef.current = 0;
     
     if (reconnectTimeoutRef.current) {
@@ -106,7 +117,6 @@ export function useWebSocket(gameId?: string) {
     }
     
     if (wsRef.current) {
-      // Remove all event listeners to prevent reconnection
       wsRef.current.onclose = null;
       wsRef.current.onerror = null;
       wsRef.current.onmessage = null;
@@ -123,58 +133,44 @@ export function useWebSocket(gameId?: string) {
   }, []);
 
   useEffect(() => {
-    if (!gameId) {
-      disconnect();
-      return;
-    }
-    
-    // Small delay to ensure cleanup from previous gameId completes
-    const timeoutId = setTimeout(() => {
-      connect();
-    }, 100);
-    
-    return () => {
-      clearTimeout(timeoutId);
-      disconnect();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId]); // Only depend on gameId, connect/disconnect are stable
+    connect();
 
-  return {
-    isConnected,
-    lastMessage,
-    send,
-    disconnect
-  };
+    return () => {
+      // Cleanup on unmount or gameId change
+      if (wsRef.current) {
+        // Don't disconnect on dependency change, just let it reconnect if needed
+      }
+    };
+  }, [gameId, connect]);
+
+  return { isConnected, lastMessage, send, disconnect };
+}
+
+interface Player {
+  userId: string;
+  username: string;
 }
 
 export function useGameEvents(gameId: string, userId: string, username: string) {
-  const { isConnected, lastMessage, send } = useWebSocket(gameId);
+  const { isConnected, lastMessage, send, disconnect } = useWebSocket(gameId);
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [players, setPlayers] = useState<Array<{ userId: string; username: string }>>([]);
-  const [chatMessages, setChatMessages] = useState<Array<{ userId: string; username: string; message: string }>>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
 
-  const hasJoinedRef = useRef(false);
-  
+  // Join game when connected
   useEffect(() => {
-    if (isConnected && gameId && userId && !hasJoinedRef.current) {
-      hasJoinedRef.current = true;
+    if (isConnected && gameId) {
       send('join_game', { gameId, userId, username });
+      console.log('Sent join_game message');
     }
-    
-    // Reset join flag when gameId or userId changes
-    return () => {
-      hasJoinedRef.current = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, gameId, userId]);
+  }, [isConnected, gameId, userId, username, send]);
 
   const lastMessageRef = useRef<string>('');
   
   useEffect(() => {
     if (!lastMessage) return;
     
-    // Prevent processing the same message twice by comparing stringified versions
+    // Prevent processing the same message twice
     const messageStr = JSON.stringify(lastMessage);
     if (lastMessageRef.current === messageStr) return;
     lastMessageRef.current = messageStr;
@@ -184,8 +180,7 @@ export function useGameEvents(gameId: string, userId: string, username: string) 
     switch (type) {
       case 'player_joined':
         setPlayers((prev) => {
-          // Avoid duplicates
-          if (prev.some(p => p.userId === payload.userId)) {
+          if (prev.some((p) => p.userId === payload.userId)) {
             return prev;
           }
           return [...prev, { userId: payload.userId, username: payload.username }];
@@ -198,7 +193,6 @@ export function useGameEvents(gameId: string, userId: string, username: string) 
 
       case 'game_started':
         setGameState(payload);
-        // Update players from game state
         if (payload.players && Array.isArray(payload.players)) {
           setPlayers(payload.players.map((p: any) => ({ userId: p.id, username: p.username })));
         }
@@ -206,7 +200,6 @@ export function useGameEvents(gameId: string, userId: string, username: string) 
 
       case 'game_update':
         setGameState(payload);
-        // Update players from game state
         if (payload.players && Array.isArray(payload.players)) {
           setPlayers(payload.players.map((p: any) => ({ userId: p.id, username: p.username })));
         }
@@ -247,6 +240,7 @@ export function useGameEvents(gameId: string, userId: string, username: string) 
     attack,
     defend,
     take,
-    beat
+    beat,
+    disconnect,
   };
 }
