@@ -23,3 +23,10 @@
 [x] 23. FIXED GAME INITIALIZATION - Added 'game_state' WebSocket message handler
 [x] 24. FIXED - Added missing REST API endpoints (join, attack, defend, take, beat)
 [x] 25. Game table now shows properly when joining instead of initialization screen
+[x] 26. IMPLEMENTED PLAYER AVATARS - Created PlayerAvatarsDisplay component
+[x] 27. Player avatars arranged in semi-circle around table
+[x] 28. Shows first letter of username in circle (with gradient background)
+[x] 29. Shows "+" for unconnected/empty player slots
+[x] 30. Number of circles matches maxPlayers of game
+[x] 31. Removed old "Ожидание игрока" indicator text
+[x] 32. Application fully operational with new avatar display system

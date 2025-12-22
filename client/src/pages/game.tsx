@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { PlayerHand } from "@/components/PlayerHand";
 import { PlayerIndicator } from "@/components/PlayerIndicator";
+import { PlayerAvatarsDisplay } from "@/components/PlayerAvatarsDisplay";
 import { GameTable } from "@/components/GameTable";
 import { CurrencyDisplay } from "@/components/CurrencyDisplay";
 import { WinAnimation } from "@/components/WinAnimation";
@@ -26,6 +27,7 @@ export default function GamePage() {
   const [winAmount, setWinAmount] = useState(0);
   const [isWin, setIsWin] = useState(true);
   const [currentPlayerId, setCurrentPlayerId] = useState<string>("");
+  const [maxPlayers, setMaxPlayers] = useState(4);
   const usernameRef = useRef(`Player${Math.floor(Math.random() * 1000)}`);
   const [username] = useState(() => usernameRef.current);
   
@@ -56,7 +58,13 @@ export default function GamePage() {
     return (gameData && !("players" in gameData)) ? gameData as Game : null;
   }, [gameData]);
 
-  // Initialize currentPlayerId only once when gameState becomes available
+  // Initialize currentPlayerId and maxPlayers when game data becomes available
+  useEffect(() => {
+    if (game && game.maxPlayers) {
+      setMaxPlayers(game.maxPlayers);
+    }
+  }, [game]);
+
   useEffect(() => {
     if (gameState && gameState.players.length > 0 && !currentPlayerId) {
       // Try to find a player that matches our userId, otherwise use first player
@@ -301,29 +309,15 @@ export default function GamePage() {
         </div>
       </div>
 
-      <div className="absolute top-20 left-4 right-4 z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {opponents.length > 0 ? (
-            opponents.map((player) => (
-              <PlayerIndicator
-                key={player.id}
-                username={player.username}
-                cardCount={player.cards.length}
-                isActive={gameState.currentAttackerId === player.id || gameState.currentDefenderId === player.id}
-                coins={player.coins}
-              />
-            ))
-          ) : (
-            <div className="col-span-full text-center">
-              <div className="inline-block p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
-                <p className="text-white text-lg font-medium">Ожидание игрока...</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
 
       <div className="absolute inset-0 flex items-center justify-center pt-32 pb-48">
+        {gameState && (
+          <PlayerAvatarsDisplay
+            gameState={gameState}
+            currentPlayerId={currentPlayerId}
+            maxPlayers={maxPlayers}
+          />
+        )}
         <GameTable
           trumpCard={gameState.trumpCard}
           deckCount={gameState.deck.length}
