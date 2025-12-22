@@ -288,18 +288,9 @@ export default function GamePage() {
           </Button>
 
           <div className="flex items-center gap-3">
-            <select
-              value={currentPlayerId}
-              onChange={(e) => setCurrentPlayerId(e.target.value)}
-              className="bg-durak-green/50 text-white border border-white/20 rounded-md px-3 py-1.5 text-sm"
-              data-testid="select-player"
-            >
-              {gameState.players.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {player.username}
-                </option>
-              ))}
-            </select>
+            <div className="text-white text-sm" data-testid="player-name">
+              {currentPlayer?.username}
+            </div>
             <CurrencyDisplay amount={currentPlayer?.coins || 500} />
           </div>
         </div>
