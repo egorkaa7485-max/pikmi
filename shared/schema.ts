@@ -63,10 +63,10 @@ export const games = sqliteTable("games", {
   maxPlayers: integer("max_players").notNull(),
   deckSize: integer("deck_size").notNull(),
   speed: text("speed").notNull(),
-  gameType: text("game_type").notNull().default("подкидной"), // подкидной, переводной
-  throwMode: text("throw_mode").notNull().default("соседи"), // соседи, все
-  variant: text("variant").notNull().default("классика"), // с шулерами, классика
-  fairness: text("fairness").notNull().default("ничья"), // честная, ничья
+  gameType: text("game_type").notNull().default("подкидной"),
+  throwMode: text("throw_mode").notNull().default("соседи"),
+  variant: text("variant").notNull().default("классика"),
+  fairness: text("fairness").notNull().default("ничья"),
   isPrivate: integer("is_private").notNull().default(0),
   password: text("password"),
   status: text("status").notNull().default("waiting"), // waiting, ready, playing, finished
@@ -74,12 +74,13 @@ export const games = sqliteTable("games", {
   currentTurn: text("current_turn"),
   trumpSuit: text("trump_suit"),
   deck: text("deck"),
-  players: text("players"),
+  players: text("players"), // JSON stringified array of {id, username, userId, isReady}
   tableCards: text("table_cards"),
   attackerId: text("attacker_id"),
   defenderId: text("defender_id"),
   winnerId: text("winner_id"),
   loserId: text("loser_id"),
+  readyDeadline: integer("ready_deadline"), // Unix timestamp when ready countdown ends
   readyTimer: integer("ready_timer"), // seconds remaining for ready countdown
   turnTimer: integer("turn_timer"), // seconds remaining for current turn
   canRematch: integer("can_rematch").notNull().default(1),
@@ -102,7 +103,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertGameSchema = z.object({
   stake: z.number().positive(),
-  maxPlayers: z.number().min(2).max(6),
+  maxPlayers: z.number().min(1).max(4),
   deckSize: z.number(),
   speed: z.enum(speedOptions),
   gameType: z.enum(gameTypes),
@@ -155,6 +156,7 @@ export interface Card {
 export interface Player {
   id: string;
   username: string;
+  userId?: string;
   cards: Card[];
   position: number;
   isReady: boolean;
@@ -176,9 +178,11 @@ export interface GameState {
   discardPile: Card[];
   currentAttackerId: string;
   currentDefenderId: string;
-  phase: "waiting" | "attacking" | "defending" | "taking" | "finished";
+  phase: "waiting" | "ready" | "attacking" | "defending" | "taking" | "finished";
   canThrowIn: boolean;
   stake: number;
+  maxPlayers: number;
+  readyTimer?: number;
 }
 
 export type GameType = typeof gameTypes[number];

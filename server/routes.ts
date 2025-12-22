@@ -1,420 +1,275 @@
-import type { Express } from "express";
-import { createServer, type Server } from "http";
-import { WebSocketServer, WebSocket } from "ws";
-import { storage } from "./storage";
-import { z } from "zod";
-import { insertGameSchema } from "@shared/schema";
-import { initializeGameState, playAttackCard, playDefenseCard, takeCards, beat } from "./gameLogic";
+import { 
+  users, friends, chatMessages, gifts, achievements, games,
+  type User, type InsertUser, 
+  type Friend, type ChatMessage, type Gift, type Achievement,
+  type Game, type InsertGame, type GameState, 
+  type Player, type Card, type TableCard, Suit 
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc } from "drizzle-orm";
+import { randomUUID } from "crypto";
 
-interface WSClient extends WebSocket {
-  userId?: string;
-  gameId?: string;
-  username?: string;
+export interface IStorage {
+  // Users
+  getUser(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  
+  // Games
+  getGames(): Promise<Game[]>;
+  getGame(id: string): Promise<Game | undefined>;
+  createGame(game: InsertGame, creatorId: string): Promise<Game>;
+  updateGame(id: string, updates: Partial<Game>): Promise<Game | undefined>;
+  deleteGame(id: string): Promise<boolean>;
+  
+  // Game State (in-memory for real-time gameplay)
+  getGameState(gameId: string): Promise<GameState | undefined>;
+  updateGameState(gameId: string, state: Partial<GameState>): Promise<GameState | undefined>;
+  
+  // Game Actions
+  joinGame(gameId: string, userId: string, username: string): Promise<boolean>;
+  leaveGame(gameId: string, userId: string): Promise<boolean>;
+  setPlayerReady(gameId: string, playerId: string, isReady: boolean): Promise<void>;
+  kickPlayer(gameId: string, playerId: string): Promise<void>;
+  
+  // Friends
+  getFriends(userId: string): Promise<Friend[]>;
+  addFriend(userId: string, friendId: string): Promise<Friend>;
+  updateFriendStatus(id: string, status: string): Promise<Friend | undefined>;
+  
+  // Chat
+  getChatMessages(gameId: string, limit?: number): Promise<ChatMessage[]>;
+  createChatMessage(message: Omit<ChatMessage, "id" | "createdAt">): Promise<ChatMessage>;
+  
+  // Gifts
+  getUserGifts(userId: string): Promise<Gift[]>;
+  sendGift(gift: Omit<Gift, "id" | "createdAt">): Promise<Gift>;
+  
+  // Achievements
+  getUserAchievements(userId: string): Promise<Achievement[]>;
+  unlockAchievement(achievement: Omit<Achievement, "id" | "unlockedAt">): Promise<Achievement>;
 }
 
-// Export the broadcastToGame function so it can be used elsewhere
-let broadcastToGameFunc: (gameId: string, message: any, excludeClient?: WSClient) => void;
+export class DatabaseStorage implements IStorage {
+  // In-memory storage for active game states (real-time)
+  private gameStates: Map<string, GameState>;
+  
+  constructor() {
+    this.gameStates = new Map();
+  }
+  
+  // ===== USERS =====
+  
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
 
-export function broadcastToGame(gameId: string, message: any, excludeClient?: WSClient) {
-  broadcastToGameFunc(gameId, message, excludeClient);
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+  
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const [updated] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // ===== GAMES =====
+
+  async getGames(): Promise<Game[]> {
+    return await db
+      .select()
+      .from(games)
+      .where(eq(games.status, "waiting"))
+      .orderBy(desc(games.createdAt));
+  }
+
+  async getGame(id: string): Promise<Game | undefined> {
+    const [game] = await db.select().from(games).where(eq(games.id, id));
+    return game || undefined;
+  }
+
+  async createGame(game: InsertGame, creatorId: string): Promise<Game> {
+    const [newGame] = await db
+      .insert(games)
+      .values({
+        ...game,
+        playerCount: 1,
+        status: "waiting",
+        creatorId,
+      })
+      .returning();
+    return newGame;
+  }
+
+  async updateGame(id: string, updates: Partial<Game>): Promise<Game | undefined> {
+    const [updated] = await db
+      .update(games)
+      .set(updates)
+      .where(eq(games.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteGame(id: string): Promise<boolean> {
+    const result = await db.delete(games).where(eq(games.id, id));
+    this.gameStates.delete(id);
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // ===== GAME STATE (in-memory for performance) =====
+
+  async getGameState(gameId: string): Promise<GameState | undefined> {
+    return this.gameStates.get(gameId);
+  }
+
+  async updateGameState(gameId: string, state: Partial<GameState>): Promise<GameState | undefined> {
+    const currentState = this.gameStates.get(gameId);
+    if (!currentState) return undefined;
+
+    const updated = { ...currentState, ...state };
+    this.gameStates.set(gameId, updated);
+    return updated;
+  }
+
+  // ===== GAME ACTIONS =====
+
+  async joinGame(gameId: string, userId: string, username: string): Promise<boolean> {
+    const game = await this.getGame(gameId);
+    if (!game || game.playerCount >= game.maxPlayers) {
+      return false;
+    }
+
+    await this.updateGame(gameId, { 
+      playerCount: game.playerCount + 1 
+    });
+    return true;
+  }
+
+  async leaveGame(gameId: string, userId: string): Promise<boolean> {
+    const game = await this.getGame(gameId);
+    if (!game) return false;
+
+    await this.updateGame(gameId, { 
+      playerCount: Math.max(1, game.playerCount - 1) 
+    });
+    return true;
+  }
+
+  async setPlayerReady(gameId: string, playerId: string, isReady: boolean): Promise<void> {
+    const gameState = await this.getGameState(gameId);
+    if (!gameState) return;
+
+    const playerIdx = gameState.players.findIndex(p => p.id === playerId);
+    if (playerIdx !== -1) {
+      gameState.players[playerIdx].isReady = isReady;
+      await this.updateGameState(gameId, gameState);
+    }
+  }
+
+  async kickPlayer(gameId: string, playerId: string): Promise<void> {
+    const gameState = await this.getGameState(gameId);
+    if (!gameState) return;
+
+    gameState.players = gameState.players.filter(p => p.id !== playerId);
+    await this.updateGameState(gameId, gameState);
+  }
+
+  // ===== FRIENDS =====
+
+  async getFriends(userId: string): Promise<Friend[]> {
+    return await db
+      .select()
+      .from(friends)
+      .where(eq(friends.userId, userId))
+      .orderBy(desc(friends.createdAt));
+  }
+
+  async addFriend(userId: string, friendId: string): Promise<Friend> {
+    const [friend] = await db
+      .insert(friends)
+      .values({ userId, friendId, status: "pending" })
+      .returning();
+    return friend;
+  }
+
+  async updateFriendStatus(id: string, status: string): Promise<Friend | undefined> {
+    const [updated] = await db
+      .update(friends)
+      .set({ status })
+      .where(eq(friends.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // ===== CHAT =====
+
+  async getChatMessages(gameId: string, limit: number = 50): Promise<ChatMessage[]> {
+    return await db
+      .select()
+      .from(chatMessages)
+      .where(eq(chatMessages.gameId, gameId))
+      .orderBy(desc(chatMessages.createdAt))
+      .limit(limit);
+  }
+
+  async createChatMessage(message: Omit<ChatMessage, "id" | "createdAt">): Promise<ChatMessage> {
+    const [newMessage] = await db
+      .insert(chatMessages)
+      .values(message)
+      .returning();
+    return newMessage;
+  }
+
+  // ===== GIFTS =====
+
+  async getUserGifts(userId: string): Promise<Gift[]> {
+    return await db
+      .select()
+      .from(gifts)
+      .where(eq(gifts.toUserId, userId))
+      .orderBy(desc(gifts.createdAt));
+  }
+
+  async sendGift(gift: Omit<Gift, "id" | "createdAt">): Promise<Gift> {
+    const [newGift] = await db
+      .insert(gifts)
+      .values(gift)
+      .returning();
+    return newGift;
+  }
+
+  // ===== ACHIEVEMENTS =====
+
+  async getUserAchievements(userId: string): Promise<Achievement[]> {
+    return await db
+      .select()
+      .from(achievements)
+      .where(eq(achievements.userId, userId))
+      .orderBy(desc(achievements.unlockedAt));
+  }
+
+  async unlockAchievement(achievement: Omit<Achievement, "id" | "unlockedAt">): Promise<Achievement> {
+    const [newAchievement] = await db
+      .insert(achievements)
+      .values(achievement)
+      .returning();
+    return newAchievement;
+  }
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  app.get("/api/games", async (req, res) => {
-    try {
-      const games = await storage.getGames();
-      res.json(games);
-    } catch (error) {
-      console.error("Error fetching games:", error);
-      res.status(500).json({ error: "Failed to fetch games" });
-    }
-  });
-
-  app.get("/api/games/:id", async (req, res) => {
-    try {
-      const gameId = req.params.id;
-      
-      const gameState = await storage.getGameState(gameId);
-      if (gameState) {
-        return res.json(gameState);
-      }
-
-      const game = await storage.getGame(gameId);
-      if (!game) {
-        return res.status(404).json({ error: "Game not found" });
-      }
-
-      res.json(game);
-    } catch (error) {
-      console.error("Error fetching game:", error);
-      res.status(500).json({ error: "Failed to fetch game" });
-    }
-  });
-
-  app.post("/api/games", async (req, res) => {
-    try {
-      const gameData = insertGameSchema.parse(req.body);
-      const creatorId = "temp-user-id";
-
-      const game = await storage.createGame(gameData, creatorId);
-      res.status(201).json(game);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid game data", details: error.errors });
-      }
-      console.error("Error creating game:", error);
-      res.status(500).json({ error: "Failed to create game" });
-    }
-  });
-
-  app.post("/api/games/:id/join", async (req, res) => {
-    try {
-      const gameId = req.params.id;
-      const userId = "temp-user-id";
-      const username = `Player${Math.floor(Math.random() * 1000)}`;
-
-      const game = await storage.getGame(gameId);
-      if (!game) {
-        return res.status(404).json({ error: "Game not found" });
-      }
-
-      if (game.status !== "waiting") {
-        return res.status(400).json({ error: "Game already started" });
-      }
-
-      const joined = await storage.joinGame(gameId, userId, username);
-      if (!joined) {
-        return res.status(400).json({ error: "Cannot join game" });
-      }
-
-      const updatedGame = await storage.getGame(gameId);
-
-      if (updatedGame && updatedGame.playerCount >= 2) {
-        const players = Array.from({ length: updatedGame.playerCount }, (_, i) => ({
-          id: `player-${i}`,
-          username: `Игрок ${i + 1}`,
-          coins: 500,
-        }));
-
-        const gameState = initializeGameState(
-          gameId,
-          players,
-          updatedGame.deckSize as 24 | 36 | 52,
-          updatedGame.stake
-        );
-
-        await storage.updateGame(gameId, { status: "playing" });
-        
-        (storage as any).gameStates.set(gameId, gameState);
-        
-        return res.json(gameState);
-      }
-
-      res.json(updatedGame);
-    } catch (error) {
-      console.error("Error joining game:", error);
-      res.status(500).json({ error: "Failed to join game" });
-    }
-  });
-
-  app.post("/api/games/:id/attack", async (req, res) => {
-    try {
-      const gameId = req.params.id;
-      const { playerId, card } = req.body;
-
-      const gameState = await storage.getGameState(gameId);
-      if (!gameState) {
-        return res.status(404).json({ error: "Game not found" });
-      }
-
-      const result = playAttackCard(gameState, playerId, card);
-      if ("error" in result) {
-        return res.status(400).json(result);
-      }
-
-      const updatedState = await storage.updateGameState(gameId, result);
-      broadcastToGame(gameId, { type: 'gameStateUpdate', data: updatedState || result });
-      res.json(updatedState || result);
-    } catch (error) {
-      console.error("Error playing attack card:", error);
-      res.status(500).json({ error: "Failed to play card" });
-    }
-  });
-
-  app.post("/api/games/:id/defend", async (req, res) => {
-    try {
-      const gameId = req.params.id;
-      const { playerId, card, tableCardIndex } = req.body;
-
-      const gameState = await storage.getGameState(gameId);
-      if (!gameState) {
-        return res.status(404).json({ error: "Game not found" });
-      }
-
-      const result = playDefenseCard(gameState, playerId, card, tableCardIndex);
-      if ("error" in result) {
-        return res.status(400).json(result);
-      }
-
-      const updatedState = await storage.updateGameState(gameId, result);
-      broadcastToGame(gameId, { type: 'gameStateUpdate', data: updatedState || result });
-      res.json(updatedState || result);
-    } catch (error) {
-      console.error("Error playing defense card:", error);
-      res.status(500).json({ error: "Failed to play card" });
-    }
-  });
-
-  app.post("/api/games/:id/take", async (req, res) => {
-    try {
-      const gameId = req.params.id;
-      const { playerId } = req.body;
-
-      const gameState = await storage.getGameState(gameId);
-      if (!gameState) {
-        return res.status(404).json({ error: "Game not found" });
-      }
-
-      const result = takeCards(gameState, playerId);
-      if ("error" in result) {
-        return res.status(400).json(result);
-      }
-
-      const updatedState = await storage.updateGameState(gameId, result);
-      res.json(updatedState || result);
-    } catch (error) {
-      console.error("Error taking cards:", error);
-      res.status(500).json({ error: "Failed to take cards" });
-    }
-  });
-
-  app.post("/api/games/:id/beat", async (req, res) => {
-    try {
-      const gameId = req.params.id;
-      const { playerId } = req.body;
-
-      const gameState = await storage.getGameState(gameId);
-      if (!gameState) {
-        return res.status(404).json({ error: "Game not found" });
-      }
-
-      const result = beat(gameState, playerId);
-      if ("error" in result) {
-        return res.status(400).json(result);
-      }
-
-      const updatedState = await storage.updateGameState(gameId, result);
-      broadcastToGame(gameId, { type: 'gameStateUpdate', data: updatedState || result });
-      res.json(updatedState || result);
-    } catch (error) {
-      console.error("Error beating cards:", error);
-      res.status(500).json({ error: "Failed to beat cards" });
-    }
-  });
-
-  const httpServer = createServer(app);
-
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
-  const clients = new Map<string, Set<WSClient>>();
-
-  broadcastToGameFunc = function(gameId: string, message: any, excludeClient?: WSClient) {
-    const gameClients = clients.get(gameId);
-    if (!gameClients) return;
-
-    const payload = JSON.stringify(message);
-    gameClients.forEach((client) => {
-      if (client !== excludeClient && client.readyState === WebSocket.OPEN) {
-        client.send(payload);
-      }
-    });
-  };
-
-  wss.on('connection', (ws: WSClient) => {
-    console.log('WebSocket client connected');
-
-    ws.on('message', async (data) => {
-      try {
-        const message = JSON.parse(data.toString());
-        const { type, payload } = message;
-
-        switch (type) {
-          case 'join_game': {
-            const { gameId, userId, username } = payload;
-            ws.gameId = gameId;
-            ws.userId = userId;
-            ws.username = username;
-
-            if (!clients.has(gameId)) {
-              clients.set(gameId, new Set());
-            }
-            clients.get(gameId)!.add(ws);
-
-            const joined = await storage.joinGame(gameId, userId, username);
-            if (joined) {
-              const updatedGame = await storage.getGame(gameId);
-              
-              // Send current game state if game is already playing
-              const existingGameState = await storage.getGameState(gameId);
-              if (existingGameState) {
-                ws.send(JSON.stringify({
-                  type: 'game_update',
-                  payload: existingGameState
-                }));
-              }
-              
-              broadcastToGame(gameId, {
-                type: 'player_joined',
-                payload: { userId, username, game: updatedGame }
-              }, ws); // Exclude sender from broadcast
-
-              if (updatedGame && updatedGame.playerCount >= 2 && updatedGame.status === "waiting") {
-                const players = Array.from({ length: updatedGame.playerCount }, (_, i) => ({
-                  id: `player-${i}`,
-                  username: `Игрок ${i + 1}`,
-                  coins: updatedGame.stake,
-                }));
-
-                const gameState = initializeGameState(
-                  gameId,
-                  players,
-                  updatedGame.deckSize as 24 | 36 | 52,
-                  updatedGame.stake
-                );
-
-                await storage.updateGame(gameId, { status: "playing" });
-                (storage as any).gameStates.set(gameId, gameState);
-
-                broadcastToGame(gameId, {
-                  type: 'game_started',
-                  payload: gameState
-                });
-              }
-            }
-            break;
-          }
-
-          case 'leave_game': {
-            const { gameId, userId } = payload;
-            await storage.leaveGame(gameId, userId);
-            
-            if (ws.gameId) {
-              clients.get(ws.gameId)?.delete(ws);
-            }
-
-            broadcastToGame(gameId, {
-              type: 'player_left',
-              payload: { userId }
-            }, ws);
-            break;
-          }
-
-          case 'chat_message': {
-            const { gameId, userId, message: chatText } = payload;
-            
-            const chatMessage = await storage.createChatMessage({
-              gameId,
-              userId,
-              message: chatText
-            });
-
-            broadcastToGame(gameId, {
-              type: 'chat_message',
-              payload: chatMessage
-            });
-            break;
-          }
-
-          case 'attack': {
-            const { gameId, playerId, card } = payload;
-            const gameState = await storage.getGameState(gameId);
-            
-            if (gameState) {
-              const result = playAttackCard(gameState, playerId, card);
-              if (!("error" in result)) {
-                await storage.updateGameState(gameId, result);
-                broadcastToGame(gameId, {
-                  type: 'game_update',
-                  payload: result
-                });
-              }
-            }
-            break;
-          }
-
-          case 'defend': {
-            const { gameId, playerId, card, tableCardIndex } = payload;
-            const gameState = await storage.getGameState(gameId);
-            
-            if (gameState) {
-              const result = playDefenseCard(gameState, playerId, card, tableCardIndex);
-              if (!("error" in result)) {
-                await storage.updateGameState(gameId, result);
-                broadcastToGame(gameId, {
-                  type: 'game_update',
-                  payload: result
-                });
-              }
-            }
-            break;
-          }
-
-          case 'take': {
-            const { gameId, playerId } = payload;
-            const gameState = await storage.getGameState(gameId);
-            
-            if (gameState) {
-              const result = takeCards(gameState, playerId);
-              if (!("error" in result)) {
-                await storage.updateGameState(gameId, result);
-                broadcastToGame(gameId, {
-                  type: 'game_update',
-                  payload: result
-                });
-              }
-            }
-            break;
-          }
-
-          case 'beat': {
-            const { gameId, playerId } = payload;
-            const gameState = await storage.getGameState(gameId);
-            
-            if (gameState) {
-              const result = beat(gameState, playerId);
-              if (!("error" in result)) {
-                await storage.updateGameState(gameId, result);
-                broadcastToGame(gameId, {
-                  type: 'game_update',
-                  payload: result
-                });
-              }
-            }
-            break;
-          }
-        }
-      } catch (error) {
-        console.error('WebSocket message error:', error);
-      }
-    });
-
-    ws.on('close', () => {
-      if (ws.gameId) {
-        clients.get(ws.gameId)?.delete(ws);
-        
-        if (ws.userId) {
-          broadcastToGame(ws.gameId, {
-            type: 'player_left',
-            payload: { userId: ws.userId }
-          }, ws);
-        }
-      }
-      console.log('WebSocket client disconnected');
-    });
-
-    ws.on('error', (error) => {
-      console.error('WebSocket error:', error);
-    });
-  });
-
-  return httpServer;
-}
+export const storage = new DatabaseStorage();
