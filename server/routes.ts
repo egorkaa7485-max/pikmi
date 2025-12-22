@@ -175,6 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const gamesList = await storage.getGames();
       res.json(gamesList);
     } catch (error) {
+      console.error("Fetch games error:", error);
       res.status(500).json({ error: "Failed to fetch games" });
     }
   });
@@ -211,6 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.status(201).json(game);
     } catch (error) {
+      console.error("Game creation error:", error);
       res.status(500).json({ error: "Failed to create game" });
     }
   });

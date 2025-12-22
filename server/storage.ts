@@ -127,7 +127,7 @@ export class DatabaseStorage implements IStorage {
   async deleteGame(id: string): Promise<boolean> {
     const result = await db.delete(games).where(eq(games.id, id));
     this.gameStates.delete(id);
-    return result.rowCount ? result.rowCount > 0 : false;
+    return true;
   }
 
   // ===== GAME STATE (in-memory for performance) =====

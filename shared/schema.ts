@@ -1,10 +1,10 @@
-import { sql } from "drizzle-orm";
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import { pgTable, text, integer, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
 
-export const users = sqliteTable("users", {
-  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))))`),
+export const users = pgTable("users", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   coins: integer("coins").notNull().default(500),
@@ -15,49 +15,49 @@ export const users = sqliteTable("users", {
   avatarUrl: text("avatar_url"),
   rating: integer("rating").notNull().default(1000),
   gamesPlayed: integer("games_played").notNull().default(0),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
-  lastSeen: integer("last_seen", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  lastSeen: timestamp("last_seen").notNull().defaultNow(),
 });
 
-export const friends = sqliteTable("friends", {
-  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))))`),
+export const friends = pgTable("friends", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id),
   friendId: text("friend_id").notNull().references(() => users.id),
-  status: text("status").notNull().default("pending"), // pending, accepted, blocked
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const chatMessages = sqliteTable("chat_messages", {
-  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))))`),
+export const chatMessages = pgTable("chat_messages", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   gameId: text("game_id").notNull().references(() => games.id),
   userId: text("user_id").notNull().references(() => users.id),
   message: text("message").notNull(),
-  type: text("type").notNull().default("text"), // text, emoji, sticker
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  type: text("type").notNull().default("text"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const gifts = sqliteTable("gifts", {
-  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))))`),
+export const gifts = pgTable("gifts", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   fromUserId: text("from_user_id").notNull().references(() => users.id),
   toUserId: text("to_user_id").notNull().references(() => users.id),
-  giftType: text("gift_type").notNull(), // sticker, coins
-  giftValue: integer("gift_value").notNull(), // amount or sticker ID
+  giftType: text("gift_type").notNull(),
+  giftValue: integer("gift_value").notNull(),
   message: text("message"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const achievements = sqliteTable("achievements", {
-  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))))`),
+export const achievements = pgTable("achievements", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull().references(() => users.id),
-  achievementType: text("achievement_type").notNull(), // first_win, 10_wins, 100_wins, etc.
+  achievementType: text("achievement_type").notNull(),
   title: text("title").notNull(),
   description: text("description"),
   iconUrl: text("icon_url"),
-  unlockedAt: integer("unlocked_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  unlockedAt: timestamp("unlocked_at").notNull().defaultNow(),
 });
 
-export const games = sqliteTable("games", {
-  id: text("id").primaryKey().default(sql`(lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))))`),
+export const games = pgTable("games", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   stake: integer("stake").notNull(),
   playerCount: integer("player_count").notNull(),
   maxPlayers: integer("max_players").notNull(),
@@ -69,24 +69,24 @@ export const games = sqliteTable("games", {
   fairness: text("fairness").notNull().default("ничья"),
   isPrivate: integer("is_private").notNull().default(0),
   password: text("password"),
-  status: text("status").notNull().default("waiting"), // waiting, ready, playing, finished
+  status: text("status").notNull().default("waiting"),
   creatorId: text("creator_id").notNull(),
   currentTurn: text("current_turn"),
   trumpSuit: text("trump_suit"),
   deck: text("deck"),
-  players: text("players"), // JSON stringified array of {id, username, userId, isReady}
+  players: text("players"),
   tableCards: text("table_cards"),
   attackerId: text("attacker_id"),
   defenderId: text("defender_id"),
   winnerId: text("winner_id"),
   loserId: text("loser_id"),
-  readyDeadline: integer("ready_deadline"), // Unix timestamp when ready countdown ends
-  readyTimer: integer("ready_timer"), // seconds remaining for ready countdown
-  turnTimer: integer("turn_timer"), // seconds remaining for current turn
+  readyDeadline: integer("ready_deadline"),
+  readyTimer: integer("ready_timer"),
+  turnTimer: integer("turn_timer"),
   canRematch: integer("can_rematch").notNull().default(1),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
-  startedAt: integer("started_at", { mode: "timestamp" }),
-  finishedAt: integer("finished_at", { mode: "timestamp" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  startedAt: timestamp("started_at"),
+  finishedAt: timestamp("finished_at"),
 });
 
 // Insert schemas
