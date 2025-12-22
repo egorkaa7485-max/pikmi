@@ -229,7 +229,12 @@ export default function GamePage() {
       <div className="min-h-screen bg-green-felt flex flex-col items-center justify-center gap-6">
         <div className="text-center text-white space-y-4">
           <h2 className="text-3xl font-bold">Ожидание игроков...</h2>
-          <p className="text-xl">{game.playerCount} / {game.maxPlayers}</p>
+          <div className="flex items-center justify-center gap-4">
+            <div className="text-lg">
+              <span className="font-bold text-xl">{game.playerCount}</span>
+              <span className="opacity-80"> / {game.maxPlayers}</span>
+            </div>
+          </div>
           <p className="text-lg opacity-80">Ставка: {game.stake}</p>
         </div>
         <Button
@@ -239,7 +244,7 @@ export default function GamePage() {
           disabled={joinMutation.isPending}
           data-testid="button-join-game"
         >
-          {joinMutation.isPending ? "Присоединение..." : "Готов"}
+          {joinMutation.isPending ? "Присоединение..." : "Присоединиться"}
         </Button>
         <Button
           variant="outline"
@@ -298,15 +303,23 @@ export default function GamePage() {
 
       <div className="absolute top-20 left-4 right-4 z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {opponents.map((player) => (
-            <PlayerIndicator
-              key={player.id}
-              username={player.username}
-              cardCount={player.cards.length}
-              isActive={gameState.currentAttackerId === player.id || gameState.currentDefenderId === player.id}
-              coins={player.coins}
-            />
-          ))}
+          {opponents.length > 0 ? (
+            opponents.map((player) => (
+              <PlayerIndicator
+                key={player.id}
+                username={player.username}
+                cardCount={player.cards.length}
+                isActive={gameState.currentAttackerId === player.id || gameState.currentDefenderId === player.id}
+                coins={player.coins}
+              />
+            ))
+          ) : (
+            <div className="col-span-full text-center">
+              <div className="inline-block p-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
+                <p className="text-white text-lg font-medium">Ожидание игрока...</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

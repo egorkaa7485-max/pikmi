@@ -200,7 +200,7 @@ export function useGameEvents(gameId: string, userId: string, username: string) 
         setGameState(payload);
         // Update players from game state
         if (payload.players && Array.isArray(payload.players)) {
-          setPlayers(payload.players.map(p => ({ userId: p.id, username: p.username })));
+          setPlayers(payload.players.map((p: any) => ({ userId: p.id, username: p.username })));
         }
         break;
 
@@ -208,7 +208,7 @@ export function useGameEvents(gameId: string, userId: string, username: string) 
         setGameState(payload);
         // Update players from game state
         if (payload.players && Array.isArray(payload.players)) {
-          setPlayers(payload.players.map(p => ({ userId: p.id, username: p.username })));
+          setPlayers(payload.players.map((p: any) => ({ userId: p.id, username: p.username })));
         }
         break;
 
