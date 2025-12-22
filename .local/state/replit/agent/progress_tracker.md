@@ -14,3 +14,7 @@
 [x] 14. Migrated from SQLite to PostgreSQL schema/driver
 [x] 15. Fixed game creation 500 errors with improved logging
 [x] 16. Verified database connection and API health
+[x] 17. Fixed WebSocket message payload structure
+[x] 18. Implemented persistent game state in PostgreSQL
+[x] 19. Fixed undefined values in database updates
+[x] 20. Verified game table initialization and waiting status

@@ -41,8 +41,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const message = JSON.parse(data.toString());
         
         switch (message.type) {
+          case "chat_message": {
+            if (!currentGameId || !currentUserId) break;
+            const { content } = message.payload || message;
+            
+            await storage.createChatMessage({
+              gameId: currentGameId,
+              userId: currentUserId,
+              message: content || "",
+              type: "text",
+            });
+            
+            broadcastToGame(currentGameId, { 
+              type: "chat_message", 
+              payload: { userId: currentUserId, message: content } 
+            });
+            break;
+          }
+
           case "join_game": {
-            const { gameId, userId, username } = message;
+            const { gameId, userId, username } = message.payload;
             currentGameId = gameId;
             currentUserId = userId;
 
@@ -57,7 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             const gameState = await storage.getGameState(gameId);
             if (gameState) {
-              broadcastToGame(gameId, { type: "game_state", data: gameState });
+              broadcastToGame(gameId, { type: "game_state", payload: gameState });
             }
             break;
           }
@@ -69,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               const gameState = await storage.getGameState(currentGameId);
               if (gameState) {
-                broadcastToGame(currentGameId, { type: "game_state", data: gameState });
+                broadcastToGame(currentGameId, { type: "game_state", payload: gameState });
               }
             }
             break;
@@ -77,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           case "play_card": {
             if (!currentGameId || !currentUserId) break;
-            const { card, tableCardIndex, action } = message;
+            const { card, tableCardIndex, action } = message.payload;
             
             let gameState = await storage.getGameState(currentGameId);
             if (!gameState) break;
@@ -91,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             if (result && !("error" in result)) {
               await storage.updateGameState(currentGameId, result);
-              broadcastToGame(currentGameId, { type: "game_state", data: result });
+              broadcastToGame(currentGameId, { type: "game_state", payload: result });
             } else if (result && "error" in result) {
               ws.send(JSON.stringify({ type: "error", message: result.error }));
             }
@@ -107,7 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const result = takeCards(gameState, currentUserId);
             if (!("error" in result)) {
               await storage.updateGameState(currentGameId, result);
-              broadcastToGame(currentGameId, { type: "game_state", data: result });
+              broadcastToGame(currentGameId, { type: "game_state", payload: result });
             } else {
               ws.send(JSON.stringify({ type: "error", message: result.error }));
             }
@@ -123,28 +141,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const result = beat(gameState, currentUserId);
             if (!("error" in result)) {
               await storage.updateGameState(currentGameId, result);
-              broadcastToGame(currentGameId, { type: "game_state", data: result });
+              broadcastToGame(currentGameId, { type: "game_state", payload: result });
             } else {
               ws.send(JSON.stringify({ type: "error", message: result.error }));
             }
-            break;
-          }
-
-          case "chat_message": {
-            if (!currentGameId || !currentUserId) break;
-            const { content } = message;
-            
-            await storage.createChatMessage({
-              gameId: currentGameId,
-              userId: currentUserId,
-              message: content,
-              type: "text",
-            });
-            
-            broadcastToGame(currentGameId, { 
-              type: "chat_message", 
-              data: { userId: currentUserId, message: content } 
-            });
             break;
           }
         }

@@ -147,15 +147,46 @@ export class DatabaseStorage implements IStorage {
   // ===== GAME STATE (in-memory for performance) =====
 
   async getGameState(gameId: string): Promise<GameState | undefined> {
-    return this.gameStates.get(gameId);
+    const game = await this.getGame(gameId);
+    if (!game) return undefined;
+
+    let phase: GameState["phase"] = "waiting";
+    if (game.status === "playing") {
+      phase = "attacking";
+    }
+
+    return {
+      id: game.id,
+      players: game.players ? JSON.parse(game.players) : [],
+      deck: game.deck ? JSON.parse(game.deck) : [],
+      trumpSuit: (game.trumpSuit as Suit) || "hearts",
+      tableCards: game.tableCards ? JSON.parse(game.tableCards) : [],
+      phase,
+      stake: game.stake,
+      maxPlayers: game.maxPlayers,
+      currentAttackerId: game.attackerId || "",
+      currentDefenderId: game.defenderId || "",
+      canThrowIn: true,
+      discardPile: []
+    };
   }
 
   async updateGameState(gameId: string, state: Partial<GameState>): Promise<GameState | undefined> {
-    const currentState = this.gameStates.get(gameId);
+    const currentState = await this.getGameState(gameId);
     if (!currentState) return undefined;
 
     const updated = { ...currentState, ...state };
-    this.gameStates.set(gameId, updated);
+    
+    await this.updateGame(gameId, {
+      players: JSON.stringify(updated.players),
+      deck: JSON.stringify(updated.deck),
+      trumpSuit: updated.trumpSuit,
+      tableCards: JSON.stringify(updated.tableCards),
+      status: updated.phase === "waiting" ? "waiting" : "playing",
+      attackerId: updated.currentAttackerId || null,
+      defenderId: updated.currentDefenderId || null,
+    });
+
     return updated;
   }
 
