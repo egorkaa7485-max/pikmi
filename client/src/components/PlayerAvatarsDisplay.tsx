@@ -19,17 +19,12 @@ export function PlayerAvatarsDisplay({
     return players[index] || null;
   });
 
-  // Find current player index
-  const currentPlayerIndex = playerSlots.findIndex(
-    (player) => player?.id === currentPlayerId
-  );
-
-  // Calculate positions with current player at bottom center
+  // Host is always at index 0 (first player, bottom center)
   // Other players arranged perpendicular/opposite around the table
   const getPlayerPosition = (slotIndex: number) => {
-    // Calculate relative position from current player
-    // Current player is always at bottom (index 0 in display)
-    const relativeIndex = (slotIndex - currentPlayerIndex + maxPlayers) % maxPlayers;
+    // Calculate relative position from host player (always at index 0)
+    // Host is always at bottom (index 0 in display)
+    const relativeIndex = slotIndex;
 
     // For a circular arrangement around the table
     // 0 = bottom (current player)

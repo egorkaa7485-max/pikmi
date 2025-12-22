@@ -24,10 +24,10 @@
 [x] 24. FIXED - Added missing REST API endpoints (join, attack, defend, take, beat)
 [x] 25. Game table now shows properly when joining instead of initialization screen
 [x] 26. IMPLEMENTED PLAYER AVATARS - Created PlayerAvatarsDisplay component
-[x] 27. Fixed avatar positioning - current player at BOTTOM CENTER
+[x] 27. Fixed avatar positioning - HOST at BOTTOM CENTER (index 0)
 [x] 28. Other players arranged PERPENDICULAR/OPPOSITE around table (circular layout)
 [x] 29. Shows first letter of username in circle (with gradient background)
 [x] 30. Shows "+" for unconnected/empty player slots
 [x] 31. Number of circles matches maxPlayers of game
 [x] 32. Removed old "Ожидание игрока" indicator text
-[x] 33. Application fully operational with corrected avatar positioning per reference images
+[x] 33. Host positioning corrected - application fully operational per reference images
