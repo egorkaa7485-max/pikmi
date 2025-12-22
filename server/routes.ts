@@ -195,6 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/games", async (req, res) => {
     try {
       const { maxPlayers, deckSize, stake, creatorId, speed, gameType, throwMode, variant, fairness, isPrivate, password } = req.body;
+      console.log("Creating game with params:", { maxPlayers, deckSize, stake, creatorId, speed, gameType, throwMode, variant, fairness, isPrivate });
       const game = await storage.createGame(
         { 
           maxPlayers, 
@@ -213,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(game);
     } catch (error) {
       console.error("Game creation error:", error);
-      res.status(500).json({ error: "Failed to create game" });
+      res.status(500).json({ error: "Failed to create game", details: error instanceof Error ? error.message : String(error) });
     }
   });
 

@@ -67,7 +67,7 @@ export const games = pgTable("games", {
   throwMode: text("throw_mode").notNull().default("соседи"),
   variant: text("variant").notNull().default("классика"),
   fairness: text("fairness").notNull().default("ничья"),
-  isPrivate: integer("is_private").notNull().default(0),
+  isPrivate: boolean("is_private").notNull().default(false),
   password: text("password"),
   status: text("status").notNull().default("waiting"),
   creatorId: text("creator_id").notNull(),
@@ -83,7 +83,7 @@ export const games = pgTable("games", {
   readyDeadline: integer("ready_deadline"),
   readyTimer: integer("ready_timer"),
   turnTimer: integer("turn_timer"),
-  canRematch: integer("can_rematch").notNull().default(1),
+  canRematch: boolean("can_rematch").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   startedAt: timestamp("started_at"),
   finishedAt: timestamp("finished_at"),
@@ -110,7 +110,7 @@ export const insertGameSchema = z.object({
   throwMode: z.enum(throwModes),
   variant: z.enum(variants),
   fairness: z.enum(fairnessModes),
-  isPrivate: z.boolean().transform((val) => val ? 1 : 0),
+  isPrivate: z.boolean(),
   password: z.string().optional(),
 });
 
