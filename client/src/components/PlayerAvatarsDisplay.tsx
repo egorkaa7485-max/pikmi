@@ -115,8 +115,9 @@ export function PlayerAvatarsDisplay({
     } else {
       // Odd number: center one in middle, rest on sides
       if (index === Math.floor(totalOthers / 2)) {
-        // Center player
+        // Center player - raise higher to create arc
         x = 0;
+        y = -260; // Raise center avatar higher
       } else if (index < Math.floor(totalOthers / 2)) {
         // Left side
         x = -radius * ((Math.floor(totalOthers / 2) - index) / Math.ceil(totalOthers / 2));

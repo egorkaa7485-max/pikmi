@@ -24,22 +24,7 @@
 [x] 24. FIXED - Added missing REST API endpoints (join, attack, defend, take, beat)
 [x] 25. Game table now shows properly when joining instead of initialization screen
 [x] 26. IMPLEMENTED PLAYER AVATARS - Created PlayerAvatarsDisplay component
-[x] 27. YOUR AVATAR at BOTTOM CENTER - Positioned above green fade with z-index
-[x] 28. OPPONENTS in SEMI-CIRCLE - 180° arc positioned below top of screen
-[x] 29. Semi-circle responsive radius - Adapts to mobile/tablet/desktop
-[x] 30. Avatar sizes responsive - 40px (mobile), 48px (tablet), 56px (desktop)
-[x] 31. Shows first letter of username in circle (with gradient background)
-[x] 32. Shows "+" for unconnected/empty player slots
-[x] 33. Card count badges displayed on each avatar
-[x] 34. Fully responsive layout working on all screen sizes
-[x] 35. FINAL LAYOUT COMPLETE - All requirements met - Semi-circle opponents above, your avatar visible at bottom
-[x] 36. Fixed tsx installation and restarted workflow
-[x] 37. Application verified running - UI displaying correctly
-[x] 38. FIXED DATABASE SCHEMA - Pushed schema and fixed game creation 500 errors
-[x] 39. UPDATED AVATAR LAYOUT - Host circle at BOTTOM, other players at TOP from RIGHT to LEFT
-[x] 40. REFINED AVATAR CENTERING - Improved math for proper top semi-circle alignment (по середине)
-[x] 41. REPOSITIONED HOST AVATAR - Moved to bottom-1 below all buttons and controls
-[x] 42. ADJUSTED AVATAR RADIUS AND OFFSET - Increased radius to 280 and y-offset to -100 for proper blue zone placement
-[x] 43. REVERSED AVATAR DIRECTION - Changed from RIGHT to LEFT to LEFT to RIGHT, center avatar perpendicular to host
-[x] 44. PERPENDICULAR POSITIONING - Arranged other players horizontally (left-right) perpendicular to host at bottom
-[x] 45. SEMI-CIRCLE FORMATION - Repositioned avatars in 180-degree arc with center avatar at top
+[x] 27. HOST AVATAR at BOTTOM - Positioned below all game controls
+[x] 28. OTHER PLAYERS PERPENDICULAR - Arranged horizontally left-right
+[x] 29. CENTER AVATAR RAISED - Positioned higher to create arc/curve
+[x] 30. FINAL AVATAR LAYOUT - Center avatar higher, side avatars at baseline, creating smooth arc
