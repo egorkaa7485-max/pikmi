@@ -91,15 +91,15 @@ export function PlayerAvatarsDisplay({
     // Convert to radians (0° = right, 90° = top center, 180° = left)
     const radians = (angle * Math.PI) / 180;
     
-    // Responsive radius
-    const baseRadius = 250;
-    const radius = window.innerWidth < 640 ? baseRadius * 0.6 : window.innerWidth < 1024 ? baseRadius * 0.8 : baseRadius;
+    // Responsive radius - larger to spread avatars more to the edges
+    const baseRadius = 280;
+    const radius = window.innerWidth < 640 ? baseRadius * 0.7 : window.innerWidth < 1024 ? baseRadius * 0.85 : baseRadius;
     
     // Calculate x, y for semi-circle at top (right to left, centered)
     // For proper centering: x goes from positive (right) to negative (left)
     // y goes from 0 (middle) to negative (top)
     const x = radius * Math.sin(radians);
-    const y = -radius * Math.cos(radians) - 60; // Negative for top position, offset for spacing
+    const y = -radius * Math.cos(radians) - 100; // Negative for top position, larger offset for higher placement
 
     return { x, y };
   };
