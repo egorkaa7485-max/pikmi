@@ -33,3 +33,5 @@
 [x] 33. Card count badges displayed on each avatar
 [x] 34. Fully responsive layout working on all screen sizes
 [x] 35. FINAL LAYOUT COMPLETE - All requirements met - Semi-circle opponents above, your avatar visible at bottom
+[x] 36. Fixed tsx installation and restarted workflow
+[x] 37. Application verified running - UI displaying correctly
