@@ -122,8 +122,8 @@ export function PlayerAvatarsDisplay({
         );
       })}
 
-      {/* Host player at bottom center - with high z-index to appear above green fade */}
-      <div className="absolute bottom-24 md:bottom-32 lg:bottom-40 z-20">
+      {/* Host player below buttons - positioned at the very bottom with z-index */}
+      <div className="absolute bottom-1 z-20">
         {hostPlayer ? (
           <PlayerAvatar player={hostPlayer} isCurrentPlayer={false} />
         ) : (
