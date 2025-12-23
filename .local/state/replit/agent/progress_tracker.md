@@ -37,3 +37,4 @@
 [x] 37. Application verified running - UI displaying correctly
 [x] 38. FIXED DATABASE SCHEMA - Pushed schema and fixed game creation 500 errors
 [x] 39. UPDATED AVATAR LAYOUT - Host circle at BOTTOM, other players at TOP from RIGHT to LEFT
+[x] 40. REFINED AVATAR CENTERING - Improved math for proper top semi-circle alignment (по середине)

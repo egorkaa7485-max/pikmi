@@ -78,29 +78,28 @@ export function PlayerAvatarsDisplay({
     </div>
   );
 
-  // Calculate semi-circle positions for other players (right to left at top)
+  // Calculate semi-circle positions for other players (right to left at top, centered)
   const getOtherPlayerPosition = (index: number) => {
     const totalOthers = otherPlayers.length;
     if (totalOthers === 0) return { x: 0, y: 0 };
     
     // Distribute other players in a semi-circle (180 degrees) at the top
-    // From RIGHT to LEFT
+    // From RIGHT to LEFT, centered
     const angleStep = 180 / (totalOthers + 1);
     const angle = (index + 1) * angleStep; // Skip 0, start from first angle
     
-    // Convert to radians and reverse direction for right-to-left
-    // Original radians = (angle * Math.PI) / 180
-    // Reversed = (180 - angle) for right-to-left direction
-    const reversedAngle = 180 - angle;
-    const radians = (reversedAngle * Math.PI) / 180;
+    // Convert to radians (0° = right, 90° = top center, 180° = left)
+    const radians = (angle * Math.PI) / 180;
     
     // Responsive radius
     const baseRadius = 250;
     const radius = window.innerWidth < 640 ? baseRadius * 0.6 : window.innerWidth < 1024 ? baseRadius * 0.8 : baseRadius;
     
-    // Calculate x, y with semi-circle at top (right to left)
-    const x = Math.cos(radians - Math.PI / 2) * radius;
-    const y = Math.sin(radians - Math.PI / 2) * radius - 80; // Offset downward from very top
+    // Calculate x, y for semi-circle at top (right to left, centered)
+    // For proper centering: x goes from positive (right) to negative (left)
+    // y goes from 0 (middle) to negative (top)
+    const x = radius * Math.sin(radians);
+    const y = -radius * Math.cos(radians) - 60; // Negative for top position, offset for spacing
 
     return { x, y };
   };
