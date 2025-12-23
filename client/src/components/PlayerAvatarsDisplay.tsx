@@ -78,29 +78,54 @@ export function PlayerAvatarsDisplay({
     </div>
   );
 
-  // Calculate semi-circle positions for other players (left to right at top, centered)
+  // Calculate perpendicular positions for other players (left and right, horizontal)
   const getOtherPlayerPosition = (index: number) => {
     const totalOthers = otherPlayers.length;
     if (totalOthers === 0) return { x: 0, y: 0 };
     
-    // Distribute other players in a semi-circle (180 degrees) at the top
-    // From LEFT to RIGHT, centered - central avatar directly above host
-    const angleStep = 180 / (totalOthers + 1);
-    const angle = (index + 1) * angleStep; // Skip 0, start from first angle
+    // Distribute other players horizontally (perpendicular to host position)
+    // Host is at bottom center, so perpendicular is horizontal (left-right)
     
-    // Reverse direction: 180° (left) to 0° (right)
-    const reversedAngle = 180 - angle;
-    const radians = (reversedAngle * Math.PI) / 180;
+    // Responsive radius - distance from center horizontally
+    const baseRadius = 250;
+    const radius = window.innerWidth < 640 ? baseRadius * 0.6 : window.innerWidth < 1024 ? baseRadius * 0.8 : baseRadius;
     
-    // Responsive radius - larger to spread avatars more to the edges
-    const baseRadius = 280;
-    const radius = window.innerWidth < 640 ? baseRadius * 0.7 : window.innerWidth < 1024 ? baseRadius * 0.85 : baseRadius;
+    // Distribute players evenly across left and right
+    // For odd number of players, one stays center; rest spread left and right
+    if (totalOthers === 1) {
+      // Single player - center horizontally
+      return { x: 0, y: -180 };
+    }
     
-    // Calculate x, y for semi-circle at top (left to right, centered)
-    // Center avatar (90°) will be directly above host (x=0)
-    const x = radius * Math.sin(radians);
-    const y = -radius * Math.cos(radians) - 100; // Negative for top position, larger offset for higher placement
-
+    const isEven = totalOthers % 2 === 0;
+    const halfLength = Math.floor(totalOthers / 2);
+    
+    let x = 0;
+    let y = -180; // Vertical position (above center)
+    
+    if (isEven) {
+      // Even number: split left and right evenly
+      if (index < halfLength) {
+        // Left side
+        x = -radius * ((halfLength - index) / halfLength);
+      } else {
+        // Right side
+        x = radius * ((index - halfLength + 1) / halfLength);
+      }
+    } else {
+      // Odd number: center one in middle, rest on sides
+      if (index === Math.floor(totalOthers / 2)) {
+        // Center player
+        x = 0;
+      } else if (index < Math.floor(totalOthers / 2)) {
+        // Left side
+        x = -radius * ((Math.floor(totalOthers / 2) - index) / Math.ceil(totalOthers / 2));
+      } else {
+        // Right side
+        x = radius * ((index - Math.floor(totalOthers / 2)) / Math.ceil(totalOthers / 2));
+      }
+    }
+    
     return { x, y };
   };
 

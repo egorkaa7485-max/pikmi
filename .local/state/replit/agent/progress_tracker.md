@@ -41,3 +41,4 @@
 [x] 41. REPOSITIONED HOST AVATAR - Moved to bottom-1 below all buttons and controls
 [x] 42. ADJUSTED AVATAR RADIUS AND OFFSET - Increased radius to 280 and y-offset to -100 for proper blue zone placement
 [x] 43. REVERSED AVATAR DIRECTION - Changed from RIGHT to LEFT to LEFT to RIGHT, center avatar perpendicular to host
+[x] 44. PERPENDICULAR POSITIONING - Arranged other players horizontally (left-right) perpendicular to host at bottom
