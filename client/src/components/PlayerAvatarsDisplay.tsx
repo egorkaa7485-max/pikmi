@@ -78,54 +78,30 @@ export function PlayerAvatarsDisplay({
     </div>
   );
 
-  // Calculate perpendicular positions for other players (left and right, horizontal)
+  // Calculate semi-circle positions for other players
   const getOtherPlayerPosition = (index: number) => {
     const totalOthers = otherPlayers.length;
     if (totalOthers === 0) return { x: 0, y: 0 };
     
-    // Distribute other players horizontally (perpendicular to host position)
-    // Host is at bottom center, so perpendicular is horizontal (left-right)
+    // Create a semi-circle arc with center avatar at top
+    // Distribute players in a 180-degree arc (semi-circle)
     
-    // Responsive radius - distance from center horizontally
-    const baseRadius = 250;
+    const baseRadius = 220;
     const radius = window.innerWidth < 640 ? baseRadius * 0.6 : window.innerWidth < 1024 ? baseRadius * 0.8 : baseRadius;
     
-    // Distribute players evenly across left and right
-    // For odd number of players, one stays center; rest spread left and right
-    if (totalOthers === 1) {
-      // Single player - center horizontally
-      return { x: 0, y: -180 };
-    }
+    // Calculate angle for each player
+    // 180 degrees for full semi-circle, distributed evenly
+    const angleStep = 180 / (totalOthers - 1 || 1); // Avoid division by zero
+    const angle = index * angleStep; // 0° to 180°
     
-    const isEven = totalOthers % 2 === 0;
-    const halfLength = Math.floor(totalOthers / 2);
+    // Convert to radians (0° = right, 90° = top center, 180° = left)
+    const radians = (angle * Math.PI) / 180;
     
-    let x = 0;
-    let y = -180; // Vertical position (above center)
-    
-    if (isEven) {
-      // Even number: split left and right evenly
-      if (index < halfLength) {
-        // Left side
-        x = -radius * ((halfLength - index) / halfLength);
-      } else {
-        // Right side
-        x = radius * ((index - halfLength + 1) / halfLength);
-      }
-    } else {
-      // Odd number: center one in middle, rest on sides
-      if (index === Math.floor(totalOthers / 2)) {
-        // Center player
-        x = 0;
-      } else if (index < Math.floor(totalOthers / 2)) {
-        // Left side
-        x = -radius * ((Math.floor(totalOthers / 2) - index) / Math.ceil(totalOthers / 2));
-      } else {
-        // Right side
-        x = radius * ((index - Math.floor(totalOthers / 2)) / Math.ceil(totalOthers / 2));
-      }
-    }
-    
+    // Semi-circle positions: center avatar at top, curving down to sides
+    // Using inverted cosine for proper semi-circle: y-value higher at center (90°)
+    const x = radius * Math.sin(radians);
+    const y = -radius * Math.cos(radians) - 80; // Negative for top position
+
     return { x, y };
   };
 
