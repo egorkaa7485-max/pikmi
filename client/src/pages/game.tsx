@@ -316,6 +316,7 @@ export default function GamePage() {
             gameState={gameState}
             currentPlayerId={currentPlayerId}
             maxPlayers={maxPlayers}
+            creatorId={game?.creatorId || gameState.players[0]?.id || ""}
           />
         )}
         <GameTable

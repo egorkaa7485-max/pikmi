@@ -5,12 +5,14 @@ interface PlayerAvatarsDisplayProps {
   gameState: GameState;
   currentPlayerId: string;
   maxPlayers: number;
+  creatorId: string;
 }
 
 export function PlayerAvatarsDisplay({
   gameState,
   currentPlayerId,
   maxPlayers,
+  creatorId,
 }: PlayerAvatarsDisplayProps) {
   const players = gameState.players;
 
@@ -19,14 +21,14 @@ export function PlayerAvatarsDisplay({
     return players[index] || null;
   });
 
-  // Find current player index
-  const currentPlayerIndex = playerSlots.findIndex(
-    (player) => player?.id === currentPlayerId
+  // Find host/creator player
+  const hostPlayerIndex = playerSlots.findIndex(
+    (player) => player?.id === creatorId
   );
 
-  // Separate current player and opponents
-  const currentPlayer = playerSlots[currentPlayerIndex];
-  const opponents = playerSlots.filter((_, index) => index !== currentPlayerIndex);
+  // Separate host player and other players
+  const hostPlayer = playerSlots[hostPlayerIndex];
+  const otherPlayers = playerSlots.filter((_, index) => index !== hostPlayerIndex);
 
   // Responsive sizing based on screen
   const getResponsiveSize = () => {
@@ -76,24 +78,27 @@ export function PlayerAvatarsDisplay({
     </div>
   );
 
-  // Calculate semi-circle positions for opponents
-  const getOpponentPosition = (index: number) => {
-    const totalOpponents = opponents.length;
-    if (totalOpponents === 0) return { x: 0, y: 0 };
+  // Calculate semi-circle positions for other players (right to left at top)
+  const getOtherPlayerPosition = (index: number) => {
+    const totalOthers = otherPlayers.length;
+    if (totalOthers === 0) return { x: 0, y: 0 };
     
-    // Distribute opponents in a semi-circle (180 degrees) at the top
-    // Center horizontally, positioned below the top
-    const angleStep = 180 / (totalOpponents + 1);
+    // Distribute other players in a semi-circle (180 degrees) at the top
+    // From RIGHT to LEFT
+    const angleStep = 180 / (totalOthers + 1);
     const angle = (index + 1) * angleStep; // Skip 0, start from first angle
     
-    // Convert to radians
-    const radians = (angle * Math.PI) / 180;
+    // Convert to radians and reverse direction for right-to-left
+    // Original radians = (angle * Math.PI) / 180
+    // Reversed = (180 - angle) for right-to-left direction
+    const reversedAngle = 180 - angle;
+    const radians = (reversedAngle * Math.PI) / 180;
     
     // Responsive radius
     const baseRadius = 250;
     const radius = window.innerWidth < 640 ? baseRadius * 0.6 : window.innerWidth < 1024 ? baseRadius * 0.8 : baseRadius;
     
-    // Calculate x, y with semi-circle at top
+    // Calculate x, y with semi-circle at top (right to left)
     const x = Math.cos(radians - Math.PI / 2) * radius;
     const y = Math.sin(radians - Math.PI / 2) * radius - 80; // Offset downward from very top
 
@@ -102,12 +107,12 @@ export function PlayerAvatarsDisplay({
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      {/* Opponents in semi-circle */}
-      {opponents.map((player, index) => {
-        const position = getOpponentPosition(index);
+      {/* Other players in semi-circle at top (right to left) */}
+      {otherPlayers.map((player, index) => {
+        const position = getOtherPlayerPosition(index);
         return (
           <div
-            key={`opponent-${index}`}
+            key={`other-${index}`}
             className="absolute"
             style={{
               transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
@@ -118,10 +123,10 @@ export function PlayerAvatarsDisplay({
         );
       })}
 
-      {/* Current player at bottom center - with high z-index to appear above green fade */}
+      {/* Host player at bottom center - with high z-index to appear above green fade */}
       <div className="absolute bottom-24 md:bottom-32 lg:bottom-40 z-20">
-        {currentPlayer ? (
-          <PlayerAvatar player={currentPlayer} isCurrentPlayer={true} />
+        {hostPlayer ? (
+          <PlayerAvatar player={hostPlayer} isCurrentPlayer={false} />
         ) : (
           <div className="text-white text-sm">Loading...</div>
         )}

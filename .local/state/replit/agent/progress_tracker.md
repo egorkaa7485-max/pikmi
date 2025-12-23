@@ -36,3 +36,4 @@
 [x] 36. Fixed tsx installation and restarted workflow
 [x] 37. Application verified running - UI displaying correctly
 [x] 38. FIXED DATABASE SCHEMA - Pushed schema and fixed game creation 500 errors
+[x] 39. UPDATED AVATAR LAYOUT - Host circle at BOTTOM, other players at TOP from RIGHT to LEFT
