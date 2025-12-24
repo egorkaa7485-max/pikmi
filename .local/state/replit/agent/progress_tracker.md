@@ -28,3 +28,5 @@
 [x] 28. OTHER PLAYERS PERPENDICULAR - Arranged horizontally left-right
 [x] 29. CENTER AVATAR RAISED - Positioned higher to create arc/curve
 [x] 30. FINAL AVATAR LAYOUT - Center avatar higher, side avatars at baseline, creating smooth arc
+[x] 31. IMPLEMENTED BOT SYSTEM - Bots join games randomly (30-120s), leave if game doesn't start (60-240s)
+[x] 32. BOT AI - Bots receive enhanced cards and play smart strategy

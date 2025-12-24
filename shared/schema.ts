@@ -161,6 +161,7 @@ export interface Player {
   position: number;
   isReady: boolean;
   coins: number;
+  isBot?: boolean;
 }
 
 export interface TableCard {

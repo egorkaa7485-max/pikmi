@@ -11,6 +11,7 @@ import {
   takeCards, 
   beat 
 } from "./gameLogic";
+import { initializeBotGame, cleanupBotGame } from "./botManager";
 
 // WebSocket connections mapped by game ID
 const gameConnections = new Map<string, Map<string, WebSocket>>();
@@ -226,6 +227,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         creatorId
       );
+      
+      // Initialize bot system for this game
+      await initializeBotGame(game.id);
+      
       res.status(201).json(game);
     } catch (error) {
       console.error("Game creation error:", error);
@@ -348,6 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/games/:id", async (req, res) => {
     try {
+      cleanupBotGame(req.params.id);
       await storage.deleteGame(req.params.id);
       res.status(204).send();
     } catch (error) {
