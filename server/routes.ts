@@ -369,6 +369,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/games/:id/ready", async (req, res) => {
+    try {
+      const gameId = req.params.id;
+      const { playerId } = req.body;
+      
+      const gameState = await storage.getGameState(gameId);
+      if (!gameState) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+      
+      const player = gameState.players.find(p => p.id === playerId);
+      if (!player) {
+        return res.status(404).json({ error: "Player not found" });
+      }
+      
+      player.isReady = true;
+      
+      const allReady = gameState.players.length === gameState.maxPlayers && 
+                     gameState.players.every(p => p.isReady);
+      
+      if (allReady) {
+        gameState.phase = "attacking";
+        const game = await storage.getGame(gameId);
+        if (game) {
+          await storage.updateGame(gameId, { status: "playing", startedAt: new Date() });
+        }
+      }
+      
+      await storage.updateGameState(gameId, gameState);
+      broadcastToGame(gameId, { type: "game_state", payload: gameState });
+      res.json(gameState);
+    } catch (error) {
+      console.error("Game ready error:", error);
+      res.status(500).json({ error: "Failed to mark ready" });
+    }
+  });
+
   app.delete("/api/games/:id", async (req, res) => {
     try {
       cleanupBotGame(req.params.id);

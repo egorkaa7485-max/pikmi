@@ -207,9 +207,32 @@ export default function GamePage() {
     takeMutation.mutate();
   };
 
+  const readyMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", `/api/games/${gameId}/ready`, {
+        playerId: currentPlayerId,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Успешно",
+        description: "Вы готовы к игре",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось пометить готовность",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleReady = () => {
     if (game && game.status === "waiting") {
       joinMutation.mutate();
+    } else if (gameState && gameState.players.length === maxPlayers) {
+      readyMutation.mutate();
     }
   };
 
@@ -351,15 +374,18 @@ export default function GamePage() {
               Беру
             </Button>
 
-            <Button
-              size="lg"
-              onClick={handleReady}
-              disabled={true}
-              data-testid="button-ready"
-              className="px-8 text-lg font-bold"
-            >
-              Готов
-            </Button>
+            {gameState && gameState.players.length === maxPlayers && (
+              <Button
+                size="lg"
+                onClick={handleReady}
+                disabled={readyMutation.isPending}
+                data-testid="button-ready"
+                className="px-8 text-lg font-bold"
+                variant="default"
+              >
+                {readyMutation.isPending ? "Отправка..." : "Готов"}
+              </Button>
+            )}
           </div>
 
           {currentPlayer && (
