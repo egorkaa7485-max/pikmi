@@ -3,7 +3,7 @@ import { storage } from "./storage";
 import { broadcastToGame } from "./app";
 import { canBeatCard } from "./gameLogic";
 
-const rankValues = {
+const rankValues: Record<string, number> = {
   "6": 6, "7": 7, "8": 8, "9": 9, "10": 10,
   "J": 11, "Q": 12, "K": 13, "A": 14,
 };
@@ -14,6 +14,7 @@ interface BotGame {
   joinTimeout?: NodeJS.Timeout;
   leaveTimeout?: NodeJS.Timeout;
   joinedAt: number;
+  moveTimeout?: NodeJS.Timeout;
 }
 
 const botGames = new Map<string, BotGame>();
@@ -35,16 +36,15 @@ export async function initializeBotGame(gameId: string): Promise<void> {
     joinedAt: Date.now(),
   };
 
-  // Schedule first bot join (30-120 seconds)
   const firstDelay = getRandomDelay(30000, 120000);
   botGame.joinTimeout = setTimeout(() => {
     scheduleNextBotJoin(gameId);
   }, firstDelay);
 
-  // Schedule bot leave if game doesn't start (60-240 seconds)
+  const leaveDelay = getRandomDelay(60000, 240000);
   botGame.leaveTimeout = setTimeout(() => {
     scheduleBotLeave(gameId);
-  }, getRandomDelay(60000, 240000));
+  }, leaveDelay);
 
   botGames.set(gameId, botGame);
 }
@@ -58,35 +58,38 @@ async function scheduleNextBotJoin(gameId: string): Promise<void> {
   const botGame = botGames.get(gameId);
   if (!botGame) return;
 
-  // Calculate free slots
   const freeSlots = game.maxPlayers - game.playerCount;
   if (freeSlots > 0) {
     const botId = `bot_${gameId}_${botGame.botIds.size}`;
-    const botUsername = `Bot_${botGame.botIds.size + 1}`;
+    const botUsername = `Бот_${botGame.botIds.size + 1}`;
     
-    // Create bot user
-    const botUser = await storage.createUser({
-      username: botUsername,
-      password: "bot_password",
-    });
-    
-    // Join game with enhanced cards
-    const success = await storage.joinGame(gameId, botUser.id, botUsername);
-    if (success) {
-      botGame.botIds.add(botUser.id);
-      botPlayers.add(botUser.id);
+    try {
+      const botUser = await storage.createUser({
+        username: botUsername,
+        password: "bot_password",
+      });
       
-      // Enhance bot's cards
-      await enhanceBotCards(gameId, botUser.id);
-      
-      const gameState = await storage.getGameState(gameId);
-      if (gameState) {
-        broadcastToGame(gameId, { type: "game_state", payload: gameState });
+      const success = await storage.joinGame(gameId, botUser.id, botUsername);
+      if (success) {
+        botGame.botIds.add(botUser.id);
+        botPlayers.add(botUser.id);
+        
+        await enhanceBotCards(gameId, botUser.id);
+        
+        const gameState = await storage.getGameState(gameId);
+        if (gameState) {
+          const playerIndex = gameState.players.findIndex(p => p.id === botUser.id);
+          if (playerIndex !== -1) {
+            gameState.players[playerIndex].isBot = true;
+          }
+          broadcastToGame(gameId, { type: "game_state", payload: gameState });
+        }
       }
+    } catch (error) {
+      console.error("Error joining bot:", error);
     }
   }
 
-  // Schedule next join if slots available
   if (freeSlots > 1 && botGame.botIds.size < freeSlots) {
     const nextDelay = getRandomDelay(30000, 120000);
     botGame.joinTimeout = setTimeout(() => {
@@ -102,11 +105,10 @@ async function enhanceBotCards(gameId: string, botId: string): Promise<void> {
   const botPlayer = gameState.players.find(p => p.id === botId);
   if (!botPlayer) return;
 
-  // Give bot stronger cards - move high-value cards to front
   const { trumpSuit } = gameState;
   botPlayer.cards.sort((a, b) => {
-    const aValue = rankValues[a.rank as keyof typeof rankValues] || 0;
-    const bValue = rankValues[b.rank as keyof typeof rankValues] || 0;
+    const aValue = rankValues[a.rank] || 0;
+    const bValue = rankValues[b.rank] || 0;
     
     const aIsTrump = a.suit === trumpSuit ? 1 : 0;
     const bIsTrump = b.suit === trumpSuit ? 1 : 0;
@@ -124,26 +126,46 @@ async function scheduleBotLeave(gameId: string): Promise<void> {
   const botGame = botGames.get(gameId);
   if (!botGame || botGame.botIds.size === 0) return;
 
-  // Remove bots with random delays
   const botIdArray = Array.from(botGame.botIds);
   for (const botId of botIdArray) {
     const delay = getRandomDelay(0, 10000);
     setTimeout(async () => {
-      await storage.leaveGame(gameId, botId);
-      botPlayers.delete(botId);
-      botGame.botIds.delete(botId);
-      
-      const gameState = await storage.getGameState(gameId);
-      if (gameState) {
-        broadcastToGame(gameId, { type: "game_state", payload: gameState });
+      try {
+        await storage.leaveGame(gameId, botId);
+        botPlayers.delete(botId);
+        botGame.botIds.delete(botId);
+        
+        const gameState = await storage.getGameState(gameId);
+        if (gameState) {
+          broadcastToGame(gameId, { type: "game_state", payload: gameState });
+        }
+        
+        await cleanupEmptyGame(gameId);
+      } catch (error) {
+        console.error("Error leaving bot:", error);
       }
     }, delay);
   }
 }
 
+export async function cleanupEmptyGame(gameId: string): Promise<void> {
+  try {
+    const game = await storage.getGame(gameId);
+    if (!game) return;
+
+    const gameState = await storage.getGameState(gameId);
+    if (!gameState || gameState.players.length === 0) {
+      cleanupBotGame(gameId);
+      await storage.deleteGame(gameId);
+    }
+  } catch (error) {
+    console.error("Error cleaning up empty game:", error);
+  }
+}
+
 export async function makeBotMove(gameId: string, botId: string): Promise<void> {
   const gameState = await storage.getGameState(gameId);
-  if (!gameState) return;
+  if (!gameState || gameState.phase === "waiting") return;
 
   const botPlayer = gameState.players.find(p => p.id === botId);
   if (!botPlayer || !botPlayer.isBot) return;
@@ -152,19 +174,19 @@ export async function makeBotMove(gameId: string, botId: string): Promise<void> 
   const isDefender = gameState.currentDefenderId === botId;
 
   if (isAttacker || (gameState.canThrowIn && !isDefender)) {
-    // Bot attacks
-    performBotAttack(gameState, botId);
+    await performBotAttack(gameId, gameState, botId);
   } else if (isDefender) {
-    // Bot defends
-    performBotDefense(gameState, botId);
+    await performBotDefense(gameId, gameState, botId);
   }
 }
 
-function performBotAttack(gameState: GameState, botId: string): void {
+async function performBotAttack(gameId: string, gameState: GameState, botId: string): Promise<void> {
   const bot = gameState.players.find(p => p.id === botId);
-  if (!bot) return;
+  if (!bot || bot.cards.length === 0) return;
 
-  // Find strong attacking card
+  const defender = gameState.players.find(p => p.id === gameState.currentDefenderId);
+  if (!defender) return;
+
   const validCards = bot.cards.filter(card => {
     if (gameState.tableCards.length === 0) return true;
     
@@ -180,41 +202,100 @@ function performBotAttack(gameState: GameState, botId: string): void {
   });
 
   if (validCards.length === 0) return;
+  if (gameState.tableCards.length >= defender.cards.length) return;
 
-  // Prefer high-value cards
   validCards.sort((a, b) => {
-    const aValue = rankValues[a.rank as keyof typeof rankValues] || 0;
-    const bValue = rankValues[b.rank as keyof typeof rankValues] || 0;
-    return bValue - aValue;
+    const aValue = rankValues[a.rank] || 0;
+    const bValue = rankValues[b.rank] || 0;
+    
+    const aIsTrump = a.suit === gameState.trumpSuit ? 1 : 0;
+    const bIsTrump = b.suit === gameState.trumpSuit ? 1 : 0;
+    
+    return (bIsTrump - aIsTrump) * 100 + (bValue - aValue);
   });
 
   const cardToPlay = validCards[0];
-  // This would be sent via WebSocket in real implementation
+  
+  setTimeout(async () => {
+    try {
+      const { playAttackCard } = await import("./gameLogic");
+      const result = playAttackCard(gameState, botId, cardToPlay);
+      
+      if (result && !("error" in result)) {
+        await storage.updateGameState(gameId, result);
+        broadcastToGame(gameId, { type: "game_state", payload: result });
+      }
+    } catch (error) {
+      console.error("Error bot attack:", error);
+    }
+  }, getRandomDelay(500, 1500));
 }
 
-function performBotDefense(gameState: GameState, botId: string): void {
+async function performBotDefense(gameId: string, gameState: GameState, botId: string): Promise<void> {
   const bot = gameState.players.find(p => p.id === botId);
-  if (!bot) return;
+  if (!bot || bot.cards.length === 0) return;
 
-  // Find cards that can beat the attack card
-  const lastTableCard = gameState.tableCards[gameState.tableCards.length - 1];
-  if (!lastTableCard || lastTableCard.defenseCard) return;
+  const lastTableCard = gameState.tableCards.find(tc => !tc.defenseCard);
+  if (!lastTableCard) {
+    setTimeout(async () => {
+      try {
+        const { beat } = await import("./gameLogic");
+        const result = beat(gameState, botId);
+        
+        if (result && !("error" in result)) {
+          await storage.updateGameState(gameId, result);
+          broadcastToGame(gameId, { type: "game_state", payload: result });
+        }
+      } catch (error) {
+        console.error("Error bot beat:", error);
+      }
+    }, getRandomDelay(800, 2000));
+    return;
+  }
 
   const beatableCards = bot.cards.filter(card => 
     canBeatCard(lastTableCard.attackCard, card, gameState.trumpSuit)
   );
 
-  if (beatableCards.length === 0) return;
+  if (beatableCards.length === 0) {
+    setTimeout(async () => {
+      try {
+        const { takeCards } = await import("./gameLogic");
+        const result = takeCards(gameState, botId);
+        
+        if (result && !("error" in result)) {
+          await storage.updateGameState(gameId, result);
+          broadcastToGame(gameId, { type: "game_state", payload: result });
+        }
+      } catch (error) {
+        console.error("Error bot take:", error);
+      }
+    }, getRandomDelay(1000, 2500));
+    return;
+  }
 
-  // Prefer weaker cards that still beat (save strong cards)
   beatableCards.sort((a, b) => {
-    const aValue = rankValues[a.rank as keyof typeof rankValues] || 0;
-    const bValue = rankValues[b.rank as keyof typeof rankValues] || 0;
+    const aValue = rankValues[a.rank] || 0;
+    const bValue = rankValues[b.rank] || 0;
     return aValue - bValue;
   });
 
   const cardToPlay = beatableCards[0];
-  // This would be sent via WebSocket in real implementation
+  const tableCardIndex = gameState.tableCards.findIndex(tc => !tc.defenseCard);
+
+  setTimeout(async () => {
+    try {
+      const { playDefenseCard } = await import("./gameLogic");
+      const result = playDefenseCard(gameState, botId, cardToPlay, tableCardIndex);
+      
+      if (result && !("error" in result)) {
+        await storage.updateGameState(gameId, result);
+        broadcastToGame(gameId, { type: "game_state", payload: result });
+      }
+    } catch (error) {
+      console.error("Error bot defense:", error);
+    }
+  }, getRandomDelay(600, 1800));
 }
 
 export function cleanupBotGame(gameId: string): void {
@@ -223,6 +304,7 @@ export function cleanupBotGame(gameId: string): void {
 
   if (botGame.joinTimeout) clearTimeout(botGame.joinTimeout);
   if (botGame.leaveTimeout) clearTimeout(botGame.leaveTimeout);
+  if (botGame.moveTimeout) clearTimeout(botGame.moveTimeout);
   
   botGame.botIds.forEach(id => botPlayers.delete(id));
   botGames.delete(gameId);

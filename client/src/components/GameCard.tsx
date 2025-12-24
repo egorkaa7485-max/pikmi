@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Game } from "@shared/schema";
-import { Users, Layers } from "lucide-react";
+import { Users, Layers, Users2 } from "lucide-react";
 import { GameModeIcon } from "./GameModeIcon";
 import { cn } from "@/lib/utils";
 
@@ -10,8 +10,15 @@ interface GameCardProps {
   onClick?: () => void;
 }
 
+function getPlayerInitial(text: string): string {
+  if (!text) return "?";
+  return text.charAt(0).toUpperCase();
+}
+
 export function GameCard({ game, onClick }: GameCardProps) {
   const playerCountText = `${game.playerCount}/${game.maxPlayers}`;
+  const players = game.players ? JSON.parse(game.players) : [];
+  const displayedPlayers = players.slice(0, 3);
 
   return (
     <Card
@@ -36,7 +43,7 @@ export function GameCard({ game, onClick }: GameCardProps) {
             </Badge>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
             <div className="flex items-center gap-1">
               <Layers className="w-3 h-3" />
               <span>{game.deckSize}</span>
@@ -44,14 +51,31 @@ export function GameCard({ game, onClick }: GameCardProps) {
             <span>•</span>
             <span className="capitalize">{game.speed}</span>
           </div>
+
+          <div className="flex items-center gap-1">
+            {displayedPlayers.map((player: any, idx: number) => (
+              <div
+                key={idx}
+                className="w-6 h-6 rounded-full bg-primary/80 flex items-center justify-center text-xs font-bold text-white"
+                title={player?.username || "Player"}
+              >
+                {player ? getPlayerInitial(player.username) : "?"}
+              </div>
+            ))}
+            {players.length > 3 && (
+              <div className="text-xs text-muted-foreground px-1">
+                +{players.length - 3}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col items-end gap-2">
           <div className="grid grid-cols-2 gap-1">
-            <GameModeIcon mode={game.gameType} className="w-4 h-4 text-primary" title={game.gameType} />
-            <GameModeIcon mode={game.throwMode} className="w-4 h-4 text-primary" title={game.throwMode} />
-            <GameModeIcon mode={game.variant} className="w-4 h-4 text-primary" title={game.variant} />
-            <GameModeIcon mode={game.fairness} className="w-4 h-4 text-primary" title={game.fairness} />
+            <GameModeIcon mode={game.gameType as any} className="w-4 h-4 text-primary" title={game.gameType} />
+            <GameModeIcon mode={game.throwMode as any} className="w-4 h-4 text-primary" title={game.throwMode} />
+            <GameModeIcon mode={game.variant as any} className="w-4 h-4 text-primary" title={game.variant} />
+            <GameModeIcon mode={game.fairness as any} className="w-4 h-4 text-primary" title={game.fairness} />
           </div>
           {game.status === "waiting" && (
             <Badge variant="secondary" className="text-xs">

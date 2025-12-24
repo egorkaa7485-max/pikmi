@@ -11,7 +11,12 @@ import {
   takeCards, 
   beat 
 } from "./gameLogic";
-import { initializeBotGame, cleanupBotGame } from "./botManager";
+import { initializeBotGame, cleanupBotGame, cleanupEmptyGame, makeBotMove } from "./botManager";
+
+// Helper function
+function getRandomDelay(min: number, max: number): number {
+  return Math.random() * (max - min) + min;
+}
 
 // WebSocket connections mapped by game ID
 const gameConnections = new Map<string, Map<string, WebSocket>>();
@@ -111,6 +116,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (result && !("error" in result)) {
               await storage.updateGameState(currentGameId, result);
               broadcastToGame(currentGameId, { type: "game_state", payload: result });
+              
+              const updatedState = await storage.getGameState(currentGameId);
+              if (updatedState) {
+                const nextPlayerId = updatedState.phase === "defending" 
+                  ? updatedState.currentDefenderId 
+                  : updatedState.currentAttackerId;
+                const nextPlayer = updatedState.players.find(p => p.id === nextPlayerId);
+                if (nextPlayer?.isBot && nextPlayerId) {
+                  setTimeout(() => makeBotMove(currentGameId, nextPlayerId), getRandomDelay(500, 2000));
+                }
+              }
             } else if (result && "error" in result) {
               ws.send(JSON.stringify({ type: "error", message: result.error }));
             }
@@ -127,6 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (!("error" in result)) {
               await storage.updateGameState(currentGameId, result);
               broadcastToGame(currentGameId, { type: "game_state", payload: result });
+              await cleanupEmptyGame(currentGameId);
             } else {
               ws.send(JSON.stringify({ type: "error", message: result.error }));
             }
@@ -143,6 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (!("error" in result)) {
               await storage.updateGameState(currentGameId, result);
               broadcastToGame(currentGameId, { type: "game_state", payload: result });
+              await cleanupEmptyGame(currentGameId);
             } else {
               ws.send(JSON.stringify({ type: "error", message: result.error }));
             }
@@ -354,7 +372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/games/:id", async (req, res) => {
     try {
       cleanupBotGame(req.params.id);
-      await storage.deleteGame(req.params.id);
+      await cleanupEmptyGame(req.params.id);
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete game" });
