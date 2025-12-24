@@ -379,15 +379,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Game not found" });
       }
       
-      const player = gameState.players.find(p => p.id === playerId);
+      const player = gameState.players.find((p: any) => p.id === playerId);
       if (!player) {
         return res.status(404).json({ error: "Player not found" });
       }
       
-      player.isReady = true;
+      (player as any).isReady = true;
       
       const allReady = gameState.players.length === gameState.maxPlayers && 
-                     gameState.players.every(p => p.isReady);
+                     gameState.players.every((p: any) => p.isReady);
       
       if (allReady) {
         gameState.phase = "attacking";

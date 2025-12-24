@@ -17,7 +17,7 @@ function getPlayerInitial(text: string): string {
 
 export function GameCard({ game, onClick }: GameCardProps) {
   const playerCountText = `${game.playerCount}/${game.maxPlayers}`;
-  const players = game.players ? JSON.parse(game.players) : [];
+  const players: any[] = game.players ? JSON.parse(game.players) : [];
   const displayedPlayers = players.slice(0, 3);
 
   return (
