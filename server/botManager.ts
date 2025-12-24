@@ -1,6 +1,6 @@
 import { GameState, Player, Card } from "@shared/schema";
 import { storage } from "./storage";
-import { broadcastToGame } from "./app";
+import { broadcastToGame } from "./routes";
 import { canBeatCard } from "./gameLogic";
 
 const rankValues: Record<string, number> = {
@@ -84,17 +84,22 @@ async function scheduleNextBotJoin(gameId: string): Promise<void> {
           }
           broadcastToGame(gameId, { type: "game_state", payload: gameState });
         }
+        
+        // Always schedule next join if there are still free slots
+        const updatedGame = await storage.getGame(gameId);
+        if (updatedGame) {
+          const remainingSlots = updatedGame.maxPlayers - updatedGame.playerCount;
+          if (remainingSlots > 0) {
+            const nextDelay = getRandomDelay(30000, 120000);
+            botGame.joinTimeout = setTimeout(() => {
+              scheduleNextBotJoin(gameId);
+            }, nextDelay);
+          }
+        }
       }
     } catch (error) {
       console.error("Error joining bot:", error);
     }
-  }
-
-  if (freeSlots > 1 && botGame.botIds.size < freeSlots) {
-    const nextDelay = getRandomDelay(30000, 120000);
-    botGame.joinTimeout = setTimeout(() => {
-      scheduleNextBotJoin(gameId);
-    }, nextDelay);
   }
 }
 

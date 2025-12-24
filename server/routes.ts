@@ -182,6 +182,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (gameState) {
           broadcastToGame(currentGameId, { type: "game_state", data: gameState });
         }
+        
+        // Clean up empty games
+        await cleanupEmptyGame(currentGameId);
       }
     });
   });
